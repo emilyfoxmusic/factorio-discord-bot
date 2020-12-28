@@ -1,8 +1,14 @@
 import aiobotocore
 import logging
-from ..aws.template import template
+import os
 
-class AwsService():
+templateFile = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../aws/template.yaml'))
+try:
+  template = templateFile.read()
+finally:
+  templateFile.close()
+
+class StackClient():
   def __init__(self):
     self._session = aiobotocore.get_session()
     logging.debug('AWS service created')

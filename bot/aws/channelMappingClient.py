@@ -3,15 +3,14 @@ import logging
 
 CHANNEL_TABLE = 'FactorioChannelMapping'
 
-class Channels():
+class ChannelMappingClient():
   def __init__(self):
     self._session = aiobotocore.get_session()
 
   async def check_table_exists(self):
     async with self._session.create_client('dynamodb') as client:
       tables = await client.list_tables()
-      matching_tables = list(filter(lambda table_name: table_name == CHANNEL_TABLE, tables['TableNames']))
-      return len(matching_tables) > 0
+      return CHANNEL_TABLE in tables['TableNames']
 
   async def create_table(self):
     async with self._session.create_client('dynamodb') as client:

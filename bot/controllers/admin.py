@@ -1,17 +1,16 @@
 import logging
 from discord.ext import commands
-from ..services.aws import AwsService
-from ..services.channelService import ChannelService
+from ..services.channelMappingService import ChannelService
+from ..services.gameService import GameService
 
 class Admin(commands.Cog):
   def __init__(self, bot):
-      self.bot = bot
-      self.aws = AwsService()
-      self.channels = ChannelService()
+    self.bot = bot
+    self.channels = ChannelService()
+    self.games = GameService()
 
   @commands.Cog.listener()
   async def on_ready(self):
-    print('I am here!')
     await self.channels.init_channel_table()
 
   @commands.command(help='Create a new game', usage='<name> [version]')
@@ -20,7 +19,7 @@ class Admin(commands.Cog):
     version = args[0] if len(args) > 0 else 'latest'
     try:
       await ctx.send('Creating new game :star2:')
-      await self.aws.create_stack(name, version)
+      await self.games.create_game(name, version)
       await ctx.send('Done!')
     except:
       await ctx.send('ERROR :fire:')
@@ -30,7 +29,7 @@ class Admin(commands.Cog):
     logging.info('Received command: `!delete`')
     try:
       await ctx.send('Deleting the game')
-      await self.aws.delete_stack(name)
+      await self.games.delete_game(name)
       await ctx.send("Done!")
     except:
       await ctx.send('ERROR :fire:')
@@ -38,9 +37,9 @@ class Admin(commands.Cog):
   @commands.command(help='List all active games')
   async def list(self, ctx):
     logging.info('Received command: `!list`')
-    stacks = await self.aws.list_stacks()
+    stacks = await self.games.list_games()
     if (len(stacks) == 0):
-      await ctx.send('There are no games active at the moment. Create a new one with `!new`.')
+      await ctx.send('There are no games at the moment. Create a new one with `!new`.')
       return
     for stack in stacks:
       await ctx.send(stack['StackName'] + ': ' + stack['StackStatus'])
@@ -48,4 +47,9 @@ class Admin(commands.Cog):
   @commands.command(name="set-game", help='Link the current channel to the specified game')
   async def set_game(self, ctx, name):
     logging.info('Received command: `!set_game`')
-    await self.channels.set_channel_mapping(name, ctx.channel.guild.id, ctx.channel.id)
+    if await self.games.game_exists(name):
+      await self.channels.set_channel_mapping(name, ctx.channel.guild.id, ctx.channel.id)
+      await ctx.send(f'This channel will now control game `{name}` :tada:')
+    else:
+      await ctx.send('Sorry, I did not recognise that game :confused:')
+
