@@ -30,7 +30,7 @@ def get_status(stack_status, server_state_param):
 
 def status_message(status):
   if status == Status.CREATING:
-    return 'The game is being created as we speak :arrows_counterclockwise:'
+    return 'The game is being created as we speak :baby:'
   elif status == Status.RUNNING:
     return 'The game is running! Go make some factories :tada:'
   elif status == Status.STOPPED:
@@ -41,9 +41,3 @@ def status_message(status):
     return 'The game is shutting down... see you again soon! :cry:'
   else:
     return f'Something is amiss - the stack state is not in an expected state. Some debugging may be required... :detective:'
-
-def can_start(status):
-  return status == Status.STOPPED or status == Status.UNRECOGNISED
-
-def can_stop(status):
-  return status == Status.RUNNING or status == Status.UNRECOGNISED

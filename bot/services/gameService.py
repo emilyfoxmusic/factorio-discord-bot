@@ -2,7 +2,7 @@ import aiobotocore
 import logging
 from ..aws.stackClient import StackClient
 from ..helpers.single import single
-from ..helpers.statusHelper import get_status, can_start, can_stop
+from ..helpers.statusHelper import get_status, Status
 from ..exceptions.invalidOperationException import InvalidOperationException
 
 class GameService():
@@ -40,13 +40,19 @@ class GameService():
     return get_status(stack['StackStatus'], server_state_param['ParameterValue']) 
 
   async def try_start(self, name):
-    if can_start(await self.try_get_status(name)):
+    status = await self.try_get_status(name)
+    if status == Status.STOPPED or status == Status.UNRECOGNISED:
       await self.stack_client.update_stack(name, 'Running')
+    elif status == Status.STARTING or status == Status.RUNNING:
+      raise InvalidOperationException('Server is already running/starting')
     else:
-      raise InvalidOperationException('Server is already started')
+      raise InvalidOperationException('Please wait - another operation is in progress')
 
   async def try_stop(self, name):
-    if can_stop(await self.try_get_status(name)):
+    status = await self.try_get_status(name)
+    if status == Status.RUNNING or status == Status.UNRECOGNISED:
       await self.stack_client.update_stack(name, 'Stopped')
+    elif status == Status.STOPPING or status == Status.STOPPED:
+      raise InvalidOperationException('Server is already stopped/stopping')
     else:
-      raise InvalidOperationException('Server is already stopped')
+      raise InvalidOperationException('Please wait - another operation is in progress')
