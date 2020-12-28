@@ -15,3 +15,6 @@ class ChannelService():
 
   async def set_channel_mapping(self, name, guild_id, channel_id):
     await self.channel_client.set_mapping(name, guild_id, channel_id)
+
+  async def get_game(self, guild_id, channel_id):
+    return await self.channel_client.get_associated_game(guild_id, channel_id)

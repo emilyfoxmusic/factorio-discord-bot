@@ -38,6 +38,19 @@ class ChannelMappingClient():
         ],
         BillingMode='PAY_PER_REQUEST')
 
+  async def get_associated_game(self, guild_id, channel_id):
+    async with self._session.create_client('dynamodb') as client:
+      mapping_for_channel = await client.get_item(
+        TableName=CHANNEL_TABLE,
+        Key={
+          'GuildId': { 'S' : str(guild_id) },
+          'ChannelId': { 'S': str(channel_id) }
+        }
+      )
+      if 'Item' in mapping_for_channel:
+        return mapping_for_channel['Item']['GameName']['S']
+      return None
+
   async def get_mappings(self, name):
     async with self._session.create_client('dynamodb') as client:
       existing_mappings = await client.scan(

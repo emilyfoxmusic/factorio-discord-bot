@@ -42,3 +42,8 @@ class StackClient():
     async with self._session.create_client('cloudformation') as client:
       stack_response = await client.list_stacks()
       return list(filter(lambda stack: stack['StackStatus'] != 'DELETE_COMPLETE', stack_response['StackSummaries']))
+
+  async def stack_details(self, name):
+    async with self._session.create_client('cloudformation') as client:
+      stack_response = await client.describe_stacks(StackName=name)
+      return stack_response['Stacks'][0]
