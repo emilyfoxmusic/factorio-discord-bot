@@ -2,7 +2,6 @@ import aiobotocore
 import logging
 from ..aws.template import template
 
-
 class AwsService():
   def __init__(self):
     self._session = aiobotocore.get_session()
