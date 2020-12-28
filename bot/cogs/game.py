@@ -14,18 +14,21 @@ class Game(commands.Cog):
     return await self.channels.get_game(ctx.channel.guild.id, ctx.channel.id)
 
   @commands.command(help='Get status of the game')
+  @commands.cooldown(1, 5)
   async def status(self, ctx):
     name = await self.game_from_context(ctx)
     status = await self.games.try_get_status(name)
     await ctx.send(status_message(status))
 
   @commands.command(help='Start the game server')
+  @commands.cooldown(1, 10)
   async def start(self, ctx):
     name = await self.game_from_context(ctx)
     await self.games.try_start(name)
     await ctx.send('Successfully started :tada:')
 
   @commands.command(help='Stop the game server')
+  @commands.cooldown(1, 10)
   async def stop(self, ctx):
     name = await self.game_from_context(ctx)
     await self.games.try_stop(name)

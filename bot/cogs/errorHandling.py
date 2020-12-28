@@ -13,5 +13,7 @@ class CommandErrorHandler(commands.Cog):
       await ctx.send(f"Oops, that's not how you use this command. Use `!help {ctx.command.name}` for more details.")
     elif isinstance(error, commands.CommandNotFound):
       await ctx.send("Sorry, I don't know how to do that :sweat_smile:. Use `!help` for info on what I can do!")
+    elif isinstance(error, commands.CommandOnCooldown):
+      await ctx.send('No spam plz! :octagonal_sign: (Cooldown active - try again in a bit.)')
     else:
       await ctx.send('ERROR :fire: :skull_crossbones: :fire:')

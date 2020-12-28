@@ -14,6 +14,7 @@ class Admin(commands.Cog):
     await self.channels.init_channel_table()
 
   @commands.command(help='Create a new game', usage='<name> [version]')
+  @commands.cooldown(1, 10)
   async def new(self, ctx, name, *args):
     version = args[0] if len(args) > 0 else 'latest'
     await ctx.send(f'Creating new game: {name} :star2:')
@@ -21,12 +22,14 @@ class Admin(commands.Cog):
     await ctx.send(f'Created {name}! :partying_face:')
 
   @commands.command(help='Delete a game')
+  @commands.cooldown(1, 10)
   async def delete(self, ctx, name):
     await ctx.send(f'Deleting {name}')
     await self.games.try_delete_game(name)
     await ctx.send(f'Deleted {name}! :skull_crossbones:')
 
   @commands.command(help='List all active games')
+  @commands.cooldown(1, 5)
   async def list(self, ctx):
     stacks = await self.games.list_games()
     if (len(stacks) == 0):
