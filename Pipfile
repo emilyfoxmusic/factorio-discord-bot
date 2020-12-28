@@ -1,0 +1,12 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[requires]
+python_version = '3.8'
+
+[packages]
+aiobotocore = "~=1.1.2"
+discord.py = "~=1.5.1"
+python-dotenv = "~=0.15.0"
