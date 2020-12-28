@@ -30,6 +30,25 @@ class StackClient():
       await client.get_waiter('stack_create_complete').wait(StackName=name)
     logging.info('Created stack with name %s and version %s' % (name, version))
 
+  async def update_stack(self, name, server_state_param):
+    async with self._session.create_client('cloudformation') as client:
+      await client.update_stack(
+        StackName=name,
+        UsePreviousTemplate=True,
+        Parameters=[
+          {
+            'ParameterKey': 'ServerState',
+            'ParameterValue': server_state_param,
+          },
+          {
+            'ParameterKey': 'FactorioImageTag',
+            'UsePreviousValue': True,
+          },
+        ],
+        Capabilities=['CAPABILITY_IAM']
+      )
+      await client.get_waiter('stack_update_complete').wait(StackName=name)
+
   async def delete_stack(self, name):
     logging.debug('Deleting stack with name %s' % name)
     async with self._session.create_client('cloudformation') as client:
