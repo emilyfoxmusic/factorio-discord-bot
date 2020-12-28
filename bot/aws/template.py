@@ -6,4 +6,3 @@ try:
   template = templateFile.read()
 finally:
   templateFile.close()
-

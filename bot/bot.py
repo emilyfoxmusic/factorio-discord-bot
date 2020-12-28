@@ -1,10 +1,6 @@
 import logging
-import os
-
-import discord
 from discord.ext import commands
-
-from services.aws import AwsService
+from .services.aws import AwsService
 
 bot = commands.Bot(command_prefix='!')
 aws = AwsService()
@@ -52,7 +48,3 @@ async def list(ctx):
 @bot.command(help='Test')
 async def test(ctx, *args):
   await ctx.send('Hi!')
-
-
-DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
-bot.run(DISCORD_TOKEN)
