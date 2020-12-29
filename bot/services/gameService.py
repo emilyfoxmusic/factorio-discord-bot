@@ -22,15 +22,11 @@ class GameService():
       raise InvalidOperationException('Game not found')
 
   async def list_games(self):
-    return await self.stack_client.list_stacks()
-
-  async def get_game_by_name(self, name):
-    filtered_games = list(filter(lambda stack: stack['StackName'] == name, await self.list_games()))
-    return filtered_games[0] if len(filtered_games) > 0 else None
+    stacks = await self.stack_client.list_stacks()
+    return list(map(lambda stack: stack['StackName'], stacks))
 
   async def game_exists(self, name):
-    game = await self.get_game_by_name(name)
-    return game != None
+    return name in await self.list_games()
 
   async def try_get_status(self, name):
     if (not await self.game_exists(name)):

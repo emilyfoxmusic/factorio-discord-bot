@@ -35,8 +35,7 @@ class Admin(commands.Cog):
     if (len(stacks) == 0):
       await ctx.send('There are no games at the moment. Create a new one with `!new`.')
       return
-    for stack in stacks:
-      await ctx.send(stack['StackName'] + ': ' + stack['StackStatus'])
+    await ctx.send('Active games: \n' + '\n'.join(stacks))
 
   @commands.command(name="set-game", help='Link the current channel to the specified game')
   async def set_game(self, ctx, name):
