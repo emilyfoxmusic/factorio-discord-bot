@@ -19,7 +19,7 @@ class Admin(commands.Cog):
     version = args[0] if len(args) > 0 else 'latest'
     await ctx.send(f'Creating new game: {name} :star2:')
     await self.games.try_create_game(name, version)
-    await ctx.send(f'Created {name}! :partying_face:')
+    await ctx.send(f'Created {name}! Assign a channel with `!set-channel` and use `!start` to get the party started :partying_face:')
 
   @commands.command(help='Delete a game')
   @commands.cooldown(1, 10)
