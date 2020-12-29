@@ -28,7 +28,11 @@ class StackClient():
         ],
         Capabilities=['CAPABILITY_IAM']
       )
-      await client.get_waiter('stack_create_complete').wait(StackName=name)
+      await client.get_waiter('stack_create_complete').wait(
+        StackName=name,
+        WaiterConfig={
+          'Delay': 15
+        })
     logging.info('Created stack with name %s and version %s' % (name, version))
 
   async def update_stack(self, name, server_state_param):
@@ -48,7 +52,11 @@ class StackClient():
         ],
         Capabilities=['CAPABILITY_IAM']
       )
-      await client.get_waiter('stack_update_complete').wait(StackName=name)
+      await client.get_waiter('stack_update_complete').wait(
+        StackName=name,
+        WaiterConfig={
+          'Delay': 15
+        })
 
   async def delete_stack(self, name):
     logging.debug('Deleting stack with name %s' % name)
