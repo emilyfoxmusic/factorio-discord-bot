@@ -10,7 +10,7 @@ class Status(Enum):
 
 def get_status(stack_status, server_state_param):
   if stack_status == 'CREATE_IN_PROGRESS':
-    return Status.STARTING
+    return Status.CREATING
   elif stack_status == 'CREATE_COMPLETE' or stack_status == 'UPDATE_COMPLETE':
     if server_state_param == 'Running':
       return Status.RUNNING
