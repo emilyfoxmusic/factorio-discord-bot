@@ -52,3 +52,11 @@ class GameService():
       raise InvalidOperationException('Server is already stopped/stopping')
     else:
       raise InvalidOperationException('Please wait - another operation is in progress')
+
+  async def try_get_ip(self, name):
+    status = await self.try_get_status(name)
+    if status == Status.RUNNING:
+      instance = await self.stack_client.get_ec2_instance(name)
+      return instance['PublicIpAddress']
+    else:
+      raise InvalidOperationException('Server is not running (yet?)')

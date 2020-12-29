@@ -1,6 +1,7 @@
 import aiobotocore
 import logging
 import os
+from ..helpers.single import single
 
 templateFile = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../aws/template.yaml'))
 try:
@@ -66,3 +67,13 @@ class StackClient():
     async with self._session.create_client('cloudformation') as client:
       stack_response = await client.describe_stacks(StackName=name)
       return stack_response['Stacks'][0]
+
+  async def get_ec2_instance(self, name):
+    async with self._session.create_client('ec2') as client:
+      instances = await client.describe_instances()
+      reservation = single(lambda reservation: reservation_stack_name(reservation) == name, instances['Reservations'])
+      return reservation['Instances'][0]
+
+def reservation_stack_name(reservation):
+  tags = reservation['Instances'][0]['Tags']
+  return single(lambda tag: tag['Key'] == 'aws:cloudformation:stack-name', tags)['Value']
