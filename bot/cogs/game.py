@@ -29,6 +29,7 @@ class Game(commands.Cog):
   async def start(self, ctx):
     name = await self.game_from_context(ctx)
     if name != None:
+      await ctx.send(f'Starting server...')
       await self.games.try_start(name)
       ip = await self.games.try_get_ip(name)
       await ctx.send(f'Successfully started at `{ip}` :tada:')
@@ -38,6 +39,7 @@ class Game(commands.Cog):
   async def stop(self, ctx):
     name = await self.game_from_context(ctx)
     if name != None:
+      await ctx.send(f'Stopping server...')
       await self.games.try_stop(name)
       await ctx.send('Successfully stopped, goodbye :wave:')
 
