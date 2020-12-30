@@ -3,6 +3,7 @@ import re
 from discord.ext import commands
 from ..services.channelMappingService import ChannelService
 from ..services.gameService import GameService
+from ..services.modService import ModService
 
 name_pattern = re.compile("^[A-Za-z][A-Za-z0-9]*$")
 
@@ -11,6 +12,7 @@ class Admin(commands.Cog):
     self.bot = bot
     self.channels = ChannelService()
     self.games = GameService()
+    self.mods = ModService()
 
   @commands.Cog.listener()
   async def on_ready(self):
@@ -50,3 +52,7 @@ class Admin(commands.Cog):
       await ctx.send(f'This channel will now control game `{name}` :tada:')
     else:
       await ctx.send('Sorry, I did not recognise that game :confused:')
+
+  @commands.command()
+  async def mods(self, ctx, version, *mods):
+    await ctx.send(await self.mods.get_download_urls(version, *mods))
