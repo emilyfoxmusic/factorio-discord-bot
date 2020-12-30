@@ -53,7 +53,7 @@ Parameters:
   EnableRcon:
     Type: String
     Description: Refer to https://hub.docker.com/r/factoriotools/factorio/ for further RCON configuration details. This parameter simply opens / closes the port on the security group.
-    Default: false
+    Default: true
     AllowedValues:
     - true
     - false

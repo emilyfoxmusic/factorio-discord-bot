@@ -9,6 +9,9 @@ try:
 finally:
   templateFile.close()
 
+bot_ip = os.getenv('BOT_IP')
+ssh_key_name = os.getenv('SSH_KEY_NAME')
+
 class StackClient():
   def __init__(self):
     self._session = aiobotocore.get_session()
@@ -24,6 +27,14 @@ class StackClient():
             {
                 'ParameterKey': 'FactorioImageTag',
                 'ParameterValue': version,
+            },
+            {
+                'ParameterKey': 'YourIp',
+                'ParameterValue': bot_ip,
+            },
+            {
+                'ParameterKey': 'KeyPairName',
+                'ParameterValue': ssh_key_name,
             },
         ],
         Capabilities=['CAPABILITY_IAM']
@@ -47,6 +58,14 @@ class StackClient():
           },
           {
             'ParameterKey': 'FactorioImageTag',
+            'UsePreviousValue': True,
+          },
+          {
+            'ParameterKey': 'YourIp',
+            'UsePreviousValue': True,
+          },
+          {
+            'ParameterKey': 'KeyPairName',
             'UsePreviousValue': True,
           },
         ],
