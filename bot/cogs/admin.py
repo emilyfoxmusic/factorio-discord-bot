@@ -4,9 +4,9 @@ from discord.ext import commands
 from ..services.channelMappingService import ChannelService
 from ..services.gameService import GameService
 from ..services.modService import ModService
-
 from ..aws.ecsClient import EcsClient
-name_pattern = re.compile("^[A-Za-z][A-Za-z0-9]*$")
+
+name_pattern = re.compile("^[A-Za-z][A-Za-z0-9-]*$")
 
 class Admin(commands.Cog):
   def __init__(self, bot):
@@ -14,7 +14,6 @@ class Admin(commands.Cog):
     self.channels = ChannelService()
     self.games = GameService()
     self.mods = ModService()
-    self.tmp = EcsClient()
 
   @commands.Cog.listener()
   async def on_ready(self):
