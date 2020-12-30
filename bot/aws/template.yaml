@@ -15,7 +15,7 @@ Parameters:
   ServerState:
     Type: String
     Description: "Running: A spot instance will launch shortly after setting this parameter; your Factorio server should start within 5-10 minutes of changing this parameter (once UPDATE_IN_PROGRESS becomes UPDATE_COMPLETE). Stopped: Your spot instance (and thus Factorio container) will be terminated shortly after setting this parameter."
-    Default: Stopped
+    Default: Running
     AllowedValues: 
     - Running
     - Stopped
@@ -341,7 +341,7 @@ Resources:
           Image: !Sub "factoriotools/factorio:${FactorioImageTag}"
           Environment:
           - Name: UPDATE_MODS_ON_START
-            Value: true
+            Value: false
           PortMappings:
           - ContainerPort: 34197
             HostPort: 34197

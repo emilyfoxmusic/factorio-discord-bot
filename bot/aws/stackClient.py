@@ -9,8 +9,8 @@ try:
 finally:
   templateFile.close()
 
-bot_ip = os.getenv('BOT_IP')
-ssh_key_name = os.getenv('SSH_KEY_NAME')
+BOT_IP = os.getenv('BOT_IP')
+SSH_KEY_NAME = os.getenv('SSH_KEY_NAME')
 
 class StackClient():
   def __init__(self):
@@ -30,11 +30,11 @@ class StackClient():
             },
             {
                 'ParameterKey': 'YourIp',
-                'ParameterValue': bot_ip,
+                'ParameterValue': BOT_IP,
             },
             {
                 'ParameterKey': 'KeyPairName',
-                'ParameterValue': ssh_key_name,
+                'ParameterValue': SSH_KEY_NAME,
             },
         ],
         Capabilities=['CAPABILITY_IAM']

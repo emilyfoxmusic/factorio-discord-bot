@@ -13,6 +13,7 @@ python-dotenv = "~=0.15.0"
 api-client = "~=1.2.1"
 factorio-rcon-py = "~=1.2.1"
 packaging = "~=20.8"
+paramiko = "~=2.7.2"
 
 [dev-packages]
 pylint="*"

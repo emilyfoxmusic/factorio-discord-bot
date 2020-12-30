@@ -12,8 +12,8 @@ The Cloudformation part of this project is taken from Michael Chandler's [factor
 ### Admin commands
 These commands require the `factorio-admin` permission in discord (created by the bot).
 
-`!new <name> <version>`
-Creates a new game with the specified name and version. See the [factorio-docker](https://github.com/factoriotools/factorio-docker) readme for information about supported versions. Common choices will be 'latest' or 'stable'.
+`!new <name> <version> <mods>`
+Creates a new game with the specified name, version and mods. See the [factorio-docker](https://github.com/factoriotools/factorio-docker) readme for information about supported versions. Common choices will be 'latest' or 'stable'.
 
 `!delete <name>`
 Deletes the game specified. DATA WILL BE LOST unless you take a backup.

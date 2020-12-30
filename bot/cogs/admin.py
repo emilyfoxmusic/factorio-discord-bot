@@ -5,6 +5,7 @@ from ..services.channelMappingService import ChannelService
 from ..services.gameService import GameService
 from ..services.modService import ModService
 
+from ..aws.ecsClient import EcsClient
 name_pattern = re.compile("^[A-Za-z][A-Za-z0-9]*$")
 
 class Admin(commands.Cog):
@@ -13,20 +14,20 @@ class Admin(commands.Cog):
     self.channels = ChannelService()
     self.games = GameService()
     self.mods = ModService()
+    self.tmp = EcsClient()
 
   @commands.Cog.listener()
   async def on_ready(self):
     await self.channels.init_channel_table()
 
-  @commands.command(help='Create a new game', usage='<name> [version]')
+  @commands.command(help='Create a new game')
   @commands.cooldown(1, 10)
-  async def new(self, ctx, name, *args):
+  async def new(self, ctx, name, version, *mods):
     if not name_pattern.match(name):
-      await ctx.send(f'Name must only contain letters and numbers, and must start with a letter. :no_entry:')
+      await ctx.send(f'Name must only contain letters, numbers and -, and must start with a letter. :no_entry:')
       return
-    version = args[0] if len(args) > 0 else 'latest'
     await ctx.send(f'Creating new game: {name} :star2:')
-    await self.games.try_create_game(name, version)
+    await self.games.try_create_game(name, version, *mods)
     await ctx.send(f'Created {name}! Assign a channel with `!set-channel` and use `!start` to get the party started :partying_face:')
 
   @commands.command(help='Delete a game')
