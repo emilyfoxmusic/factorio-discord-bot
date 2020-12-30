@@ -10,6 +10,9 @@ python_version = '3.8'
 aiobotocore = "~=1.1.2"
 discord.py = "~=1.5.1"
 python-dotenv = "~=0.15.0"
+api-client = "~=1.2.1"
+factorio-rcon-py = "~=1.2.1"
+packaging = "~=20.8"
 
 [dev-packages]
 pylint="*"
