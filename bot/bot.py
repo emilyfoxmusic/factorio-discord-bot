@@ -1,12 +1,13 @@
 from discord.ext import commands
+from .cogs import admin, autoShutdown, channelManagement, commandErrorHandler, game, healthcheck, roles
 
-from .cogs.admin import Admin
-from .cogs.healthcheck import Healthcheck
-from .cogs.game import Game
-from .cogs.errorHandling import CommandErrorHandler
 
 bot = commands.Bot(command_prefix='!')
-bot.add_cog(Healthcheck(bot))
-bot.add_cog(Admin(bot))
-bot.add_cog(Game(bot))
-bot.add_cog(CommandErrorHandler(bot))
+
+bot.add_cog(admin.Admin(bot))
+bot.add_cog(autoShutdown.AutoShutdown(bot))
+bot.add_cog(channelManagement.ChannelManagement(bot))
+bot.add_cog(commandErrorHandler.CommandErrorHandler(bot))
+bot.add_cog(game.Game(bot))
+bot.add_cog(healthcheck.Healthcheck(bot))
+bot.add_cog(roles.Roles(bot))

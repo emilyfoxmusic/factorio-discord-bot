@@ -6,11 +6,14 @@ class Status(Enum):
   STOPPED = 3
   STARTING = 4
   STOPPING = 5
-  UNRECOGNISED = 6
+  DELETING = 6
+  UNRECOGNISED = 7
 
 def get_status(stack_status, server_state_param):
   if stack_status == 'CREATE_IN_PROGRESS':
     return Status.CREATING
+  if stack_status == 'DELETE_PENDING' or stack_status == 'DELETE_IN_PROGRESS':
+    return Status.DELETING
   elif stack_status == 'CREATE_COMPLETE' or stack_status == 'UPDATE_COMPLETE':
     if server_state_param == 'Running':
       return Status.RUNNING
@@ -28,7 +31,7 @@ def get_status(stack_status, server_state_param):
   else:
     return Status.UNRECOGNISED
 
-def status_message(status):
+def message(status):
   if status == Status.CREATING:
     return 'The game is being created as we speak :baby:'
   elif status == Status.RUNNING:
@@ -39,5 +42,7 @@ def status_message(status):
     return 'The game is starting up... get hyped :partying_face:'
   elif status == Status.STOPPING:
     return 'The game is shutting down... see you again soon! :cry:'
+  elif status == Status.DELETING:
+    return 'The game is being deleted RIP :skull_crossbones:'
   else:
     return f'Something is amiss - the stack state is not in an expected state. Some debugging may be required... :detective:'

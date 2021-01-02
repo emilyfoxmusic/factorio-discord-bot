@@ -1,5 +1,6 @@
 from discord.ext import commands
 
+
 class Healthcheck(commands.Cog):
   def __init__(self, bot):
       self.bot = bot

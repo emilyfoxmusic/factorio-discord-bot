@@ -1,5 +1,6 @@
 from discord.ext import commands
-from ..exceptions.invalidOperationException import InvalidOperationException
+from ..exceptions import InvalidOperationException
+
 
 class CommandErrorHandler(commands.Cog):
   def __init__(self, bot):
@@ -15,5 +16,7 @@ class CommandErrorHandler(commands.Cog):
       await ctx.send("Sorry, I don't know how to do that :sweat_smile:. Use `!help` for info on what I can do!")
     elif isinstance(error, commands.CommandOnCooldown):
       await ctx.send('No spam plz! :octagonal_sign: (Cooldown active - try again in a bit.)')
+    elif isinstance(error, commands.MissingRole):
+      await ctx.send(':hand_splayed: No can do - I only obey admins for that command.')
     else:
       await ctx.send('ERROR :fire: :skull_crossbones: :fire:')

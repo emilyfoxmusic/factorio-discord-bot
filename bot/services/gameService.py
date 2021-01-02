@@ -1,80 +1,69 @@
-import aiobotocore
 import logging
-import os
-from ..aws.stackClient import StackClient
-from ..helpers.single import single
-from ..helpers.statusHelper import get_status, Status
-from ..exceptions.invalidOperationException import InvalidOperationException
-from .modService import ModService
-from .versionService import VersionService
+from ..exceptions import InvalidOperationException
+from ..clients import stackClient
+from ..services import modService, ipService
+from ..helpers import statusHelper
+from ..utilities import single
 
-class GameService():
-  def __init__(self):
-    self.stack_client = StackClient()
-    self.mod_service = ModService()
-    self.version_service = VersionService()
 
-  async def try_create_game(self, name, version, *mods):
-    if await self.game_exists(name):
-      raise InvalidOperationException('Game already exists')
+async def create_game(name, version, *mods):
+  if await game_exists(name):
+    raise InvalidOperationException('Game already exists')
+  # We must check the mods *before* creating the stack in case they are invalid
+  # Note this also happens to check the version is syntactically correct, so it's
+  # worth running even with no mods.
+  mod_releases = await modService.get_releases(parsed_version, *mods)
+  await stackClient.create_stack(name, version)
+  if len(mod_releases) > 0:
+    await modService.install_releases(name, mod_releases)
 
-    # We don't use the parsed version if there are no mods, but we still 
-    # want to run it through to make sure that what the user entered is a
-    # *syntactically* valid version
-    parsed_version = await self.version_service.get_version(version)
+async def delete_game(name):
+  if not await game_exists(name):
+    raise InvalidOperationException('Game not found')
+  if await get_status(name) == statusHelper.Status.DELETING:
+    raise InvalidOperationException('Deletion already in progress')
+  await stackClient.delete_stack(name)
+  ipService.purge_ip(name)
 
-    if (len(mods)) == 0:
-      await self.stack_client.create_stack(name, version)
-      return
+async def get_status(name):
+  if not await game_exists(name):
+    raise InvalidOperationException('Game not found')
+  stack = await stackClient.stack_details(name)
+  return _status_from_stack(stack)
 
-    # We must check the mods *before* creating the stack in case they are invalid
-    mods_releases = await self.mod_service.get_releases(parsed_version, *mods)
-    await self.stack_client.create_stack(name, version)
-    ip = await self.try_get_ip(name)
-    await self.mod_service.install_releases(name, ip, mods_releases)
+async def start(name):
+  status = await get_status(name)
+  if status == statusHelper.Status.STOPPED or status == statusHelper.Status.UNRECOGNISED:
+    await stackClient.update_stack(name, 'Running')
+  elif status == statusHelper.Status.STARTING or status == statusHelper.Status.RUNNING:
+    raise InvalidOperationException('Server is already running/starting')
+  else:
+    raise InvalidOperationException('Please wait - another operation is in progress')
 
-  async def try_delete_game(self, name):
-    if (await self.game_exists(name)):
-      await self.stack_client.delete_stack(name)
-    else:
-      raise InvalidOperationException('Game not found')
+async def stop(name):
+  status = await get_status(name)
+  if status == statusHelper.Status.RUNNING or status == statusHelper.Status.UNRECOGNISED:
+    await stackClient.update_stack(name, 'Stopped')
+    ipService.purge_ip(name)
+  elif status == statusHelper.Status.STOPPING or status == statusHelper.Status.STOPPED:
+    raise InvalidOperationException('Server is already stopped/stopping')
+  else:
+    raise InvalidOperationException('Please wait - another operation is in progress')
 
-  async def list_games(self):
-    stacks = await self.stack_client.list_stacks()
-    return list(map(lambda stack: stack['StackName'], stacks))
+async def get_ip(name):
+  status = await get_status(name)
+  if status == statusHelper.Status.RUNNING:
+    return await ipService.get_ip(name)
+  else:
+    raise InvalidOperationException('Server is not running (yet?)')
 
-  async def game_exists(self, name):
-    return name in await self.list_games()
+async def list_games():
+  stacks = await stackClient.list_stacks()
+  return { stack['StackName']: _status_from_stack(stack) for stack in stacks }
 
-  async def try_get_status(self, name):
-    if (not await self.game_exists(name)):
-      raise InvalidOperationException('Game not found')
-    stack = await self.stack_client.stack_details(name)
-    server_state_param = single(lambda parameter: parameter['ParameterKey'] == 'ServerState', stack['Parameters'])
-    return get_status(stack['StackStatus'], server_state_param['ParameterValue']) 
+async def game_exists(name):
+  return name in await list_games()
 
-  async def try_start(self, name):
-    status = await self.try_get_status(name)
-    if status == Status.STOPPED or status == Status.UNRECOGNISED:
-      await self.stack_client.update_stack(name, 'Running')
-    elif status == Status.STARTING or status == Status.RUNNING:
-      raise InvalidOperationException('Server is already running/starting')
-    else:
-      raise InvalidOperationException('Please wait - another operation is in progress')
-
-  async def try_stop(self, name):
-    status = await self.try_get_status(name)
-    if status == Status.RUNNING or status == Status.UNRECOGNISED:
-      await self.stack_client.update_stack(name, 'Stopped')
-    elif status == Status.STOPPING or status == Status.STOPPED:
-      raise InvalidOperationException('Server is already stopped/stopping')
-    else:
-      raise InvalidOperationException('Please wait - another operation is in progress')
-
-  async def try_get_ip(self, name):
-    status = await self.try_get_status(name)
-    if status == Status.RUNNING:
-      instance = await self.stack_client.get_ec2_instance(name)
-      return instance['PublicIpAddress']
-    else:
-      raise InvalidOperationException('Server is not running (yet?)')
+def _status_from_stack(stack):
+  server_state_param = single(lambda parameter: parameter['ParameterKey'] == 'ServerState', stack['Parameters'])
+  return statusHelper.get_status(stack['StackStatus'], server_state_param['ParameterValue'])
