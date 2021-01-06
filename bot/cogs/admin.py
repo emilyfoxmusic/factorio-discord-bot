@@ -45,7 +45,7 @@ class Admin(commands.Cog):
       self.confirmation_phrases[name] = random_string(10)
       await ctx.send(f':no_entry_sign: Confirmation phrase did not match - to confirm the delete, use `!delete {name} {self.confirmation_phrases[name]}`')
 
-  @commands.command(name="set-game", help='Link the current channel to the specified game')
+  @commands.command(name='set-game', help='Link the current channel to the specified game')
   @commands.has_role(ADMIN_ROLE)
   async def set_game(self, ctx, name):
     if await gameService.game_exists(name):
@@ -54,7 +54,7 @@ class Admin(commands.Cog):
     else:
       await ctx.send('Sorry, I did not recognise that game :confused:')
 
-  @commands.command(help='List all games')
+  @commands.command(help='List all games and their current statuses')
   async def list(self, ctx):
     games = await gameService.list_games()
     if (len(games) == 0):
