@@ -22,14 +22,11 @@ async def delete_game(name):
     raise InvalidOperationException('Game not found')
   if await get_status(name) == statusHelper.Status.DELETING:
     raise InvalidOperationException('Deletion already in progress')
-  backup_url = await backupService.backup(name)
+  await backupService.backup(name)
   await stackClient.delete_stack(name)
   ipService.purge_ip(name)
-  return backup_url
 
 async def get_status(name):
-  if not await game_exists(name):
-    raise InvalidOperationException('Game not found')
   stack = await stackClient.stack_details(name)
   return _status_from_stack(stack)
 
@@ -45,10 +42,9 @@ async def start(name):
 async def stop(name):
   status = await get_status(name)
   if status == statusHelper.Status.RUNNING or status == statusHelper.Status.UNRECOGNISED:
-    backup_url = await backupService.backup(name)
+    await backupService.backup(name)
     await stackClient.update_stack(name, 'Stopped')
     ipService.purge_ip(name)
-    return backup_url
   elif status == statusHelper.Status.STOPPING or status == statusHelper.Status.STOPPED:
     raise InvalidOperationException('Server is already stopped/stopping')
   else:

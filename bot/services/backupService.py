@@ -24,7 +24,15 @@ async def backup(game):
   rcon_client = await rconService.get_rcon_client(game)
   game_time = rcon_client.game_time().replace(' ', '')
   ip = await ipService.get_ip(game)
-  sshClient.exec(ip, f'docker run -v /opt/factorio/saves:/saves --env AWS_ACCESS_KEY_ID={AWS_ACCESS_KEY_ID} --env AWS_SECRET_ACCESS_KEY={AWS_SECRET_ACCESS_KEY} --rm amazon/aws-cli s3 cp /saves/_autosave1.zip s3://{bucket_name}/{game}/{game_time}.zip')
-  all_backups = await s3Client.list_objects(bucket_name)
-  latest_backup_key = max(all_backups, key=lambda file: file['LastModified'])['Key']
-  return f'https://{bucket_name}.s3.{REGION}.amazonaws.com/{latest_backup_key}'
+  sshClient.exec(ip, f'docker run -v /opt/factorio/saves:/saves --env AWS_ACCESS_KEY_ID={AWS_ACCESS_KEY_ID} --env AWS_SECRET_ACCESS_KEY={AWS_SECRET_ACCESS_KEY} --rm amazon/aws-cli s3 cp /saves/_autosave1.zip s3://{bucket_name}/{game}/{game_time}.zip --acl public-read')
+
+async def list_backups(game):
+  game_backups = await s3Client.list_objects(bucket_name, game)
+  return list(map(lambda file: {
+    'url': build_link(file['Key']),
+    'title': file['Key'].replace(f'{game}/', ''),
+    'taken_at': file['LastModified']
+  }, game_backups))
+
+def build_link(key):
+  return f'https://{bucket_name}.s3.{REGION}.amazonaws.com/{key}'

@@ -23,7 +23,7 @@ async def create_bucket(bucket_name):
       }
     )
 
-async def list_objects(bucket_name):
+async def list_objects(bucket_name, prefix):
   async with _session.create_client('s3') as client:
-    object_response = await client.list_objects(Bucket=bucket_name)
-    return object_response['Contents']
+    object_response = await client.list_objects(Bucket=bucket_name, Prefix=prefix)
+    return object_response.get('Contents', [])
