@@ -32,7 +32,8 @@ class Admin(commands.Cog):
     if confirmation_phrase != None and confirmation_phrase == self.confirmation_phrases.get(name):
       del self.confirmation_phrases[name]
       await ctx.send(f'Deleting {name}')
-      await gameService.delete_game(name)
+      backup_url = await gameService.delete_game(name)
+      await ctx.send(f'Your complimentary backup can be found at {backup_url} :safety_vest:')
       # We want to remove any channel associations with this game - the easiest way to do that
       # is just to validate the mappings again
       await channelMappingService.validate_mappings(self.bot)

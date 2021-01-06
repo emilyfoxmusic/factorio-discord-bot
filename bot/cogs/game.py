@@ -33,9 +33,9 @@ class Game(commands.Cog):
   async def stop(self, ctx):
     game = await self.game_from_context(ctx)
     if game != None:
-      await ctx.send(f'Stopping server...')
-      await gameService.stop(game)
-      await ctx.send('Successfully stopped, goodbye :wave:')
+      await ctx.send(f'Stopping server (taking a backup first)...')
+      backup_url = await gameService.stop(game)
+      await ctx.send(f'Successfully stopped, goodbye :wave: \n (Your backup can be found at {backup_url} :safety_vest:)')
 
   @commands.command(help='Get the IP address associated with the game (if running)')
   async def ip(self, ctx):
