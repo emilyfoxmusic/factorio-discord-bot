@@ -24,8 +24,8 @@ class Backups(commands.Cog):
       else:
         await ctx.send(f'Backups can only be taken when the server is running :no_entry_sign:')
 
-  @commands.command(name='list-backups', help='Get the latest backups for the game associated with this channel')
-  async def list_backups(self, ctx, number=3, *args):
+  @commands.command(name='list-backups', help='Get the latest backup(s) for the game', usage='[number=1] [game=associated with channel]')
+  async def list_backups(self, ctx, number=1, *args):
     game = args[0] if len(args) > 0 else await gameMappingHelper.game_from_context(ctx, self.bot)
     if game != None:
       backups = await backupService.list_backups(game)
