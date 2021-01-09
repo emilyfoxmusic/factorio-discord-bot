@@ -341,7 +341,7 @@ Resources:
           Image: !Sub "factoriotools/factorio:${FactorioImageTag}"
           Environment:
           - Name: UPDATE_MODS_ON_START
-            Value: false
+            Value: true
           PortMappings:
           - ContainerPort: 34197
             HostPort: 34197

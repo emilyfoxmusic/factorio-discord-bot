@@ -1,7 +1,7 @@
 import logging
 from ..exceptions import InvalidOperationException
 from ..clients import stackClient, s3Client
-from ..services import modService, ipService, backupService
+from ..services import modService, ipService, backupService, serverSettingsService
 from ..helpers import statusHelper
 from ..utilities import single
 
@@ -16,6 +16,7 @@ async def create_game(name, version, *mods):
   await stackClient.create_stack(name, version)
   if len(mod_releases) > 0:
     await modService.install_releases(name, mod_releases)
+  await serverSettingsService.set_default_settings(name)
 
 async def delete_game(name):
   if not await game_exists(name):
