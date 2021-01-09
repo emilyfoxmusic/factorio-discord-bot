@@ -12,3 +12,10 @@ class RconClient():
       return rcon_client.send_command("/time")
     finally:
       rcon_client.close()
+
+  def save(self):
+    rcon_client = factorio_rcon.RCONClient(self.ip, 27015, self.rcon_pw)
+    try:
+      return rcon_client.send_command("/server-save")
+    finally:
+      rcon_client.close()

@@ -22,6 +22,7 @@ async def init_backup_bucket():
 
 async def backup(game):
   rcon_client = await rconService.get_rcon_client(game)
+  rcon_client.save()
   game_time = rcon_client.game_time().replace(' ', '')
   ip = await ipService.get_ip(game)
   sshClient.exec(ip, f'docker run -v /opt/factorio/saves:/saves --env AWS_ACCESS_KEY_ID={AWS_ACCESS_KEY_ID} --env AWS_SECRET_ACCESS_KEY={AWS_SECRET_ACCESS_KEY} --rm amazon/aws-cli s3 cp /saves/_autosave1.zip s3://{bucket_name}/{game}/{game_time}.zip --acl public-read')
