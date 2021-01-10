@@ -12,7 +12,7 @@ class Backups(commands.Cog):
   async def on_ready(self):
     await backupService.init_backup_bucket()
 
-  @commands.command(help='Take a backup of the game associated with this channel and post a download link')
+  @commands.command(help='Take a backup and post a download link', description='The game must be running for this command to work. Note backups are always taken automatically on stopping or deleting a server.')
   async def backup(self, ctx):
     game = await gameMappingHelper.game_from_context(ctx, self.bot)
     if game != None:
