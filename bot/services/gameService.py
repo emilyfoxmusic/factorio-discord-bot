@@ -12,7 +12,7 @@ async def create_game(name, version, *mods):
   # We must check the mods *before* creating the stack in case they are invalid
   # Note this also happens to check the version is syntactically correct, so it's
   # worth running even with no mods.
-  mod_releases = await modService.get_releases(parsed_version, *mods)
+  mod_releases = await modService.get_releases(version, *mods)
   await stackClient.create_stack(name, version)
   if len(mod_releases) > 0:
     await modService.install_releases(name, mod_releases)
