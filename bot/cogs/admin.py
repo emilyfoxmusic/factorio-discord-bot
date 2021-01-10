@@ -1,5 +1,6 @@
 import re
 import discord
+from discord import ChannelType
 from discord.ext import commands
 from ..services import channelMappingService, gameService
 from ..utilities import random_string
@@ -55,7 +56,9 @@ class Admin(commands.Cog):
 
   @commands.command(name='set-game', help='Link the current channel to the specified game')
   async def set_game(self, ctx, name):
-    if await gameService.game_exists(name):
+    if ctx.channel.type == ChannelType.private:
+      await ctx.send("Sorry, I can't do that in DM.")
+    elif await gameService.game_exists(name):
       await channelMappingService.set_channel_mapping(name, ctx.channel.guild.id, ctx.channel.id)
       await ctx.send(f'This channel will now control game `{name}` :control_knobs:')
     else:
