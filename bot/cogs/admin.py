@@ -2,7 +2,7 @@ import re
 import discord
 from discord import ChannelType
 from discord.ext import commands
-from ..services import channelMappingService, gameService
+from ..services import channelMappingService, gameService, ipService
 from ..utilities import random_string
 from .roles import FACTORIO_CATEGORY
 
@@ -25,7 +25,8 @@ class Admin(commands.Cog):
       category = discord.utils.get(guild.categories, name=FACTORIO_CATEGORY)
       channel = await category.create_text_channel(name)
       await channelMappingService.set_channel_mapping(name, guild.id, channel.id)
-    await ctx.send(f"Created {name}! Let's get this party started! :partying_face:")
+    ip = await ipService.get_ip(name)
+    await ctx.send(f"Created {name} - now running at `{ip}`! Let's get this party started! :partying_face:")
 
   @commands.command(help='Delete a game', description="This will permanently delete the game (a backup will be taken first).")
   async def delete(self, ctx, name, confirmation_phrase=None):
