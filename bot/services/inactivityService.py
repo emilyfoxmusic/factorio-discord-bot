@@ -10,8 +10,7 @@ previous_idle_statuses = {}
 
 async def auto_shutdown_loop(bot):
   global idle_trackers, previous_idle_statuses
-
-  logging.debug('Running auto-shutdown loop')
+  logging.info('Running auto-shutdown loop')
   games = await gameService.list_games()
   for game in games:
     status = games[game]

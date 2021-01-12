@@ -1,3 +1,4 @@
+import logging
 from discord.ext import commands
 from ..exceptions import InvalidOperationException
 
@@ -19,4 +20,5 @@ class CommandErrorHandler(commands.Cog):
     elif isinstance(error, commands.MissingRole):
       await ctx.send(':hand_splayed: No can do - I only obey admins for that command.')
     else:
+      logging.error('Unhandled error: %s', error)
       await ctx.send('ERROR :fire: :skull_crossbones: :fire:')
