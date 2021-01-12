@@ -23,7 +23,7 @@ async def get_releases(version, *mod_names):
   return releases
 
 async def install_releases(name, releases):
-  ip = ipService.get_ip(name)
+  ip = await ipService.get_ip(name)
   try:
     await ecsClient.set_desired_count(name, 0)
     commands = [download_command(release) for release in releases]
