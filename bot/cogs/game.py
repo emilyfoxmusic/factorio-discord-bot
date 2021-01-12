@@ -38,8 +38,8 @@ class Game(commands.Cog):
       ip = await gameService.get_ip(game)
       await ctx.send(f'Join at `{ip}` :construction:')
     
-  @commands.command(help='Reset the server auto-shutdown timer', decription="When this command is invoked, the auto-shutdown resets and the game will stay up for another 30mins.")
-  async def letmelive(self, ctx):
+  @commands.command(help='Reset the server auto-shutdown timer', decription="When this command is invoked, the auto-shutdown resets and the game will stay up for another 30mins.", name="let-me-live")
+  async def let_me_live(self, ctx):
     game = await gameMappingHelper.game_from_context(ctx, self.bot)
     if game != None:
       status = inactivityService.reset_idle_counter(game)

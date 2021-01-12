@@ -13,7 +13,7 @@ async def send_shutdown_finished(bot, game):
 
 async def send_shutdown_warning(bot, game):
   for channel in await get_game_channels(bot, game):
-    await channel.send('Server will shut down soon due to inactivity - use `!letmelive` to keep it alive for longer.')
+    await channel.send('Server will shut down soon due to inactivity - use `!let-me-live` to keep it alive for longer.')
 
 async def send_idle_message(bot, game):
   for channel in await get_game_channels(bot, game):
