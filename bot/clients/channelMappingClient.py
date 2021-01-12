@@ -35,6 +35,11 @@ async def create_table():
         },
       ],
       BillingMode='PAY_PER_REQUEST')
+    await client.get_waiter('table_exists').wait(
+      TableName=CHANNEL_TABLE,
+      WaiterConfig={
+        'Delay': 10
+      })
 
 async def get_associated_game(guild_id, channel_id):
   async with _session.create_client('dynamodb') as client:
@@ -96,7 +101,7 @@ async def delete_mappings(mappings):
 async def get_all_mappings():
   async with _session.create_client('dynamodb') as client:
     mappings_response = await client.scan(TableName=CHANNEL_TABLE)
-    return map(map_item, mappings_response['Items'])
+    return map(map_item, mappings_response.get('Items'))
 
 def map_item(item):
   return { 'guild_id': int(item['GuildId']['S']), 'channel_id': int(item['ChannelId']['S']), 'game': item['GameName']['S'] }

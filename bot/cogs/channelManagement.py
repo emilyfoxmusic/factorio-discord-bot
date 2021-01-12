@@ -8,6 +8,7 @@ class ChannelManagement(commands.Cog):
 
   @commands.Cog.listener()
   async def on_ready(self):
+    await channelMappingService.init_channel_table()
     await channelMappingService.validate_mappings(self.bot)
 
   @commands.Cog.listener()

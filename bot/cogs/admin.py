@@ -14,10 +14,6 @@ class Admin(commands.Cog):
     self.bot = bot
     self.confirmation_phrases = {}
 
-  @commands.Cog.listener()
-  async def on_ready(self):
-    await channelMappingService.init_channel_table()
-
   @commands.command(help='Create a new game', description="This will create a new game with the mods that you specify. Version must be a valid tag for the factorio tools docker container: https://hub.docker.com/r/factoriotools/factorio/. Generally you will want to use 'latest' or 'stable'.\n\ne.g. `!new my-game latest Krastorio2 clock`")
   async def new(self, ctx, name, version, *mods):
     if not name_pattern.match(name):
