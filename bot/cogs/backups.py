@@ -35,5 +35,5 @@ class Backups(commands.Cog):
         await ctx.send(f"No backups found for '{game}' :skull:")
       for backup in backups:
         taken_at = backup['taken_at']
-        embedded_link = discord.Embed(title=backup['title'], url=backup['url'], description=f'Backup taken: {taken_at:%d, %b %Y %H:%M}.')
+        embedded_link = discord.Embed(title=f'{game}-' + backup['title'], url=backup['url'], description=f'Backup taken: {taken_at:%d, %b %Y %H:%M}.')
         await ctx.send(embed=embedded_link)
