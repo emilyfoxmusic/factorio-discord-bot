@@ -1,4 +1,5 @@
 import discord
+from discord import ChannelType
 from discord.ext import commands
 
 
@@ -17,6 +18,9 @@ class Roles(commands.Cog):
 
   @commands.command(help='Assign yourself the factorio role and get involved!', name="count-me-in")
   async def count_me_in(self, ctx):
+    if ctx.channel.type == ChannelType.private:
+      await ctx.send("Sorry, I can't do that in DM.")
+      return
     role = await get_factorio_role(ctx.guild)
     await ctx.author.add_roles(role)
     await ctx.send(f'Yay, welcome {ctx.author.mention}. I\'ve messaged you some more instructions :smiley:')
@@ -24,6 +28,9 @@ class Roles(commands.Cog):
 
   @commands.command(help='Removes the factorio role so you won\'t see the games', name="count-me-out")
   async def count_me_out(self, ctx):
+    if ctx.channel.type == ChannelType.private:
+      await ctx.send("Sorry, I can't do that in DM.")
+      return
     role = await get_factorio_role(ctx.guild)
     await ctx.author.remove_roles(role)
     await ctx.send(f'Okay, come back soon! :cry:')
