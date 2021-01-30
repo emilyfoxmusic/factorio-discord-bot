@@ -10,6 +10,6 @@ class AutoShutdown(commands.Cog):
   async def on_ready(self):
     self.handle_auto_shutdown.start()
 
-  @tasks.loop(minutes=10)
+  @tasks.loop(minutes=15)
   async def handle_auto_shutdown(self):
     await inactivityService.auto_shutdown_loop(self.bot)
