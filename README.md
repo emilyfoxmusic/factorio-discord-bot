@@ -71,7 +71,7 @@ Take a backup of the game, and post the link in discord.
 `!list-backups [number=1]`
 Post links to the latest backup(s). The number posted is 1 by default.
 
-### Healtcheck
+### Healthcheck
 `!heartbeat`
 Prints a generic message - used for sanity checking that the bot is responding.
 
