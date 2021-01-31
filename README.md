@@ -88,28 +88,55 @@ Prints a generic message - used for sanity checking that the bot is responding.
 
 1. Create your AWS account, if you don't already have one.
 2. Create an IAM (API) user with the following permissions:
-    * AmazonEC2FullAccess
-    * IAMFullAccess
-    * AmazonS3FullAccess
-    * AmazonDynamoDBFullAccess
-    * AutoScalingConsoleFullAccess
-    * AmazonECS_FullAccess
-    * AmazonSSMFullAccess
-    * AmazonElasticFileSystemFullAccess
-    * AWSCloudFormationFullAccess
+  * AmazonEC2FullAccess
+  * IAMFullAccess
+  * AmazonS3FullAccess
+  * AmazonDynamoDBFullAccess
+  * AutoScalingConsoleFullAccess
+  * AmazonECS_FullAccess
+  * AmazonSSMFullAccess
+  * AmazonElasticFileSystemFullAccess
+  * AWSCloudFormationFullAccess
 (Note: if any AWS people out there know how I can reduce the permissions required and wants to raise a PR here, that would be ace!)
 3. Create an SSH key pair for the IAM user
 
 ### Bot setup
 You need to create a file called `.env` in the root of this repo to house all your secrets :) It should have the following keys:
-    * DISCORD_TOKEN=(your discord bot API token)
-    * AWS_ACCESS_KEY_ID=(from your IAM user)
-    * AWS_SECRET_ACCESS_KEY=(from your IAM user)
-    * AWS_DEFAULT_REGION=(the AWS region you want to use)
-    * BOT_IP=(the IP where the bot will be hosted)
-    * SSH_KEY_NAME=(the name of your SSH key pair)
-    * SSH_KEY_LOCATION=(where you saved the ssh key (.pem))
-    * FACTORIO_USERNAME=(your factorio username, used for downloading/updating the mods)
-    * FACTORIO_TOKEN=(your factorio token - found in `\Factorio\player-data.json` under the name 'service-token')
+* DISCORD_TOKEN=(your discord bot API token)
+* AWS_ACCESS_KEY_ID=(from your IAM user)
+* AWS_SECRET_ACCESS_KEY=(from your IAM user)
+* AWS_DEFAULT_REGION=(the AWS region you want to use)
+* BOT_IP=(the IP where the bot will be hosted)
+* SSH_KEY_NAME=(the name of your SSH key pair)
+* SSH_KEY_LOCATION=(where you saved the ssh key (.pem))
+* FACTORIO_USERNAME=(your factorio username, used for downloading/updating the mods)
+* FACTORIO_TOKEN=(your factorio token - found in `\Factorio\player-data.json` under the name 'service-token')
 
 ## Hosting the bot on a linux machine using a systemd service
+This is one option for hosting your bot, handy if you already have a home server running 24/7 :)
+
+1. Clone the code and copy your .env files to the machine.
+2. Create the python environment using `pipenv install`.
+3. Create an script (remember to mark it as executable with `chmod +x`) that will run the bot, e.g.
+```
+#!/usr/bin/env bash
+
+cd /path/to/factorio-discord-bot/
+../path/to/python -m bot
+```
+4. Create the systemd service at `/etc/systemd/system/<some-name>.service`, and add the following:
+```
+[Unit]
+Description=Run the factorio bot
+After=network.target
+
+[Service]
+Type=simple
+RemainAfterExit=yes
+ExecStart=/path/to/start.sh
+TimeoutStartSec=0
+
+[Install]
+WantedBy=default.target
+```
+5. Start the service with `sudo systemctl start <some-name>`, and set it to automatically start on boot with `sudo systemctl enable <some-name>`.
