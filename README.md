@@ -88,15 +88,15 @@ Prints a generic message - used for sanity checking that the bot is responding.
 
 1. Create your AWS account, if you don't already have one.
 2. Create an IAM (API) user with the following permissions:
-  * AmazonEC2FullAccess
-  * IAMFullAccess
-  * AmazonS3FullAccess
-  * AmazonDynamoDBFullAccess
-  * AutoScalingConsoleFullAccess
-  * AmazonECS_FullAccess
-  * AmazonSSMFullAccess
-  * AmazonElasticFileSystemFullAccess
-  * AWSCloudFormationFullAccess
+    * AmazonEC2FullAccess
+    * IAMFullAccess
+    * AmazonS3FullAccess
+    * AmazonDynamoDBFullAccess
+    * AutoScalingConsoleFullAccess
+    * AmazonECS_FullAccess
+    * AmazonSSMFullAccess
+    * AmazonElasticFileSystemFullAccess
+    * AWSCloudFormationFullAccess
 (Note: if any AWS people out there know how I can reduce the permissions required and wants to raise a PR here, that would be ace!)
 3. Create an SSH key pair for the IAM user
 
