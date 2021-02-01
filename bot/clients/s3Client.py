@@ -1,9 +1,9 @@
 import aiobotocore
 import logging
-import os
+from ..helpers.env import getenv
 
 
-REGION = os.getenv('AWS_DEFAULT_REGION')
+REGION = getenv('AWS_DEFAULT_REGION')
 
 _session = aiobotocore.get_session()
 

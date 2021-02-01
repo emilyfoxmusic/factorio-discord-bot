@@ -1,10 +1,10 @@
-import os
 from ..services import ipService
 from ..clients import sshClient, ecsClient
+from ..helpers.env import getenv
 
 
-FACTORIO_USERNAME = os.getenv('FACTORIO_USERNAME')
-FACTORIO_TOKEN = os.getenv('FACTORIO_TOKEN')
+FACTORIO_USERNAME = getenv('FACTORIO_USERNAME')
+FACTORIO_TOKEN = getenv('FACTORIO_TOKEN')
 
 async def set_default_settings(game):
   ip = await ipService.get_ip(game)

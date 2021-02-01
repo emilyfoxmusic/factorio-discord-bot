@@ -1,13 +1,13 @@
 import discord
-import os
+from ..helpers.env import getenv
 from ..clients import s3Client, sshClient
 from ..services import ipService, rconService
 from ..utilities import random_string
 
 
-REGION = os.getenv('AWS_DEFAULT_REGION')
-AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+REGION = getenv('AWS_DEFAULT_REGION')
+AWS_ACCESS_KEY_ID = getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = getenv('AWS_SECRET_ACCESS_KEY')
 BUCKET_BASE = 'factorio-backups'
 
 bucket_name = None

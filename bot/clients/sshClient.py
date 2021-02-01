@@ -1,9 +1,9 @@
 import paramiko
-import os
 import logging
+from ..helpers.env import getenv
 
 
-SSH_KEY_LOCATION = os.getenv('SSH_KEY_LOCATION')
+SSH_KEY_LOCATION = getenv('SSH_KEY_LOCATION')
 
 def exec(hostname, *commands):
   client = paramiko.SSHClient()

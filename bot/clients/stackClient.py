@@ -1,10 +1,11 @@
 import aiobotocore
 import logging
 import os
+from ..helpers.env import getenv
 
 
-BOT_IP = os.getenv('BOT_IP')
-SSH_KEY_NAME = os.getenv('SSH_KEY_NAME')
+BOT_IP = getenv('BOT_IP')
+SSH_KEY_NAME = getenv('SSH_KEY_NAME')
 
 def get_template():
   templateFile = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../template.yaml'))

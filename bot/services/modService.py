@@ -1,12 +1,12 @@
-import os
 from packaging.version import parse
 from ..clients import modClient, ecsClient, sshClient, factorioClient
 from ..services import ipService
 from ..exceptions import InvalidOperationException
+from ..helpers.env import getenv
 
 
-FACTORIO_USERNAME = os.getenv('FACTORIO_USERNAME')
-FACTORIO_TOKEN = os.getenv('FACTORIO_TOKEN')
+FACTORIO_USERNAME = getenv('FACTORIO_USERNAME')
+FACTORIO_TOKEN = getenv('FACTORIO_TOKEN')
 
 async def get_releases(version, *mod_names):
   absolute_version = get_absolute_version(version)
