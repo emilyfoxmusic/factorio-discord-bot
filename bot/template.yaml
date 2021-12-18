@@ -58,6 +58,19 @@ Parameters:
     - true
     - false
 
+  VpcId:
+    Description: AWS VPC ID
+    Type: AWS::EC2::VPC::Id
+
+  SubnetA:
+    Description: AWS Subnet A ID - must be in the VPC specified
+    Type: AWS::EC2::Subnet::Id
+
+  SubnetB:
+    Description: AWS Subnet B ID - must be in the VPC specified
+    Type: AWS::EC2::Subnet::Id
+
+
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -117,71 +130,6 @@ Mappings:
 Resources:
 
   # ====================================================
-  # BASIC VPC
-  # ====================================================
-
-  Vpc: 
-    Type: AWS::EC2::VPC
-    Properties: 
-      CidrBlock: 10.100.0.0/26
-      EnableDnsSupport: true
-      EnableDnsHostnames: true
-
-  SubnetA:
-    Type: AWS::EC2::Subnet
-    Properties:
-      AvailabilityZone: !Select 
-      - 0
-      - !GetAZs 
-        Ref: 'AWS::Region'
-      CidrBlock: !Select [ 0, !Cidr [ 10.100.0.0/26, 4, 4 ] ]
-      VpcId: !Ref Vpc  
-
-  SubnetARoute:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties: 
-      RouteTableId: !Ref RouteTable
-      SubnetId: !Ref SubnetA
-
-  SubnetBRoute:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties: 
-      RouteTableId: !Ref RouteTable
-      SubnetId: !Ref SubnetB  
-
-  SubnetB:
-    Type: AWS::EC2::Subnet
-    Properties:
-      AvailabilityZone: !Select 
-      - 1
-      - !GetAZs 
-        Ref: 'AWS::Region'
-      CidrBlock: !Select [ 1, !Cidr [ 10.100.0.0/26, 4, 4 ] ]
-      VpcId: !Ref Vpc
-
-  InternetGateway:
-    Type: AWS::EC2::InternetGateway
-    Properties: {}
-
-  InternetGatewayAttachment:
-    Type: AWS::EC2::VPCGatewayAttachment
-    Properties: 
-      InternetGatewayId: !Ref InternetGateway
-      VpcId: !Ref Vpc
-
-  RouteTable:
-    Type: AWS::EC2::RouteTable
-    Properties: 
-      VpcId: !Ref Vpc    
-
-  Route:
-    Type: AWS::EC2::Route
-    Properties: 
-      DestinationCidrBlock: 0.0.0.0/0
-      GatewayId: !Ref InternetGateway
-      RouteTableId: !Ref RouteTable
-
-  # ====================================================
   # EFS FOR PERSISTENT DATA
   # ====================================================
 
@@ -215,7 +163,7 @@ Resources:
         ToPort: 2049
         IpProtocol: tcp
         SourceSecurityGroupId: !Ref Ec2Sg
-      VpcId: !Ref Vpc
+      VpcId: vpc-086407aabd11732aa
       
   # ====================================================
   # INSTANCE CONFIG
@@ -245,7 +193,7 @@ Resources:
           IpProtocol: tcp
           CidrIp: 0.0.0.0/0
         - !Ref 'AWS::NoValue'
-      VpcId: !Ref Vpc
+      VpcId: vpc-086407aabd11732aa
 
   LaunchConfiguration:
     Type: AWS::AutoScaling::LaunchConfiguration

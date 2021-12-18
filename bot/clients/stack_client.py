@@ -23,32 +23,58 @@ _session = aiobotocore.get_session()
 async def create_stack(name, version):
     logging.info('Creating stack with name %s and version %s',
                  name, version)
-    async with _session.create_client('cloudformation') as client:
-        await client.create_stack(
-            StackName=name,
-            TemplateBody=_template,
-            Parameters=[
-                {
-                    'ParameterKey': 'FactorioImageTag',
-                    'ParameterValue': version,
-                },
-                {
-                    'ParameterKey': 'YourIp',
-                    'ParameterValue': BOT_IP,
-                },
-                {
-                    'ParameterKey': 'KeyPairName',
-                    'ParameterValue': SSH_KEY_NAME,
-                },
-            ],
-            Capabilities=['CAPABILITY_IAM']
-        )
-        await client.get_waiter('stack_create_complete').wait(
-            StackName=name,
-            WaiterConfig={
-                'Delay': 15
-            })
-    logging.info('Created stack %s with version %s', name, version)
+
+    async with _session.create_client('ec2') as ec2_client:
+        logging.info('Fetching VPC information')
+        # Assume that the account has a single default VPC
+        vpc_id = (await ec2_client.describe_vpcs(Filters=[{
+            'Name': 'is-default',
+            'Values': ['true']
+        }]))['Vpcs'][0]['VpcId']
+        subnets = await ec2_client.describe_subnets(Filters=[{
+            'Name': 'vpc-id',
+            'Values': [vpc_id]}])
+        subnet_a = subnets['Subnets'][0]['SubnetId']
+        subnet_b = subnets['Subnets'][1]['SubnetId']
+        async with _session.create_client('cloudformation') as cloudformation_client:
+            logging.info('Creating stack')
+            await cloudformation_client.create_stack(
+                StackName=name,
+                TemplateBody=_template,
+                Parameters=[
+                    {
+                        'ParameterKey': 'FactorioImageTag',
+                        'ParameterValue': version,
+                    },
+                    {
+                        'ParameterKey': 'YourIp',
+                        'ParameterValue': BOT_IP,
+                    },
+                    {
+                        'ParameterKey': 'KeyPairName',
+                        'ParameterValue': SSH_KEY_NAME,
+                    },
+                    {
+                        'ParameterKey': 'VpcId',
+                        'ParameterValue': vpc_id,
+                    },
+                    {
+                        'ParameterKey': 'SubnetA',
+                        'ParameterValue': subnet_a,
+                    },
+                    {
+                        'ParameterKey': 'SubnetB',
+                        'ParameterValue': subnet_b,
+                    }
+                ],
+                Capabilities=['CAPABILITY_IAM']
+            )
+            await cloudformation_client.get_waiter('stack_create_complete').wait(
+                StackName=name,
+                WaiterConfig={
+                    'Delay': 15
+                })
+        logging.info('Created stack %s with version %s', name, version)
 
 
 async def update_stack(name, server_state_param):
@@ -74,6 +100,18 @@ async def update_stack(name, server_state_param):
                     'ParameterKey': 'KeyPairName',
                     'UsePreviousValue': True,
                 },
+                {
+                    'ParameterKey': 'VpcId',
+                    'UsePreviousValue': True,
+                },
+                {
+                    'ParameterKey': 'SubnetA',
+                    'UsePreviousValue': True,
+                },
+                {
+                    'ParameterKey': 'SubnetB',
+                    'UsePreviousValue': True,
+                }
             ],
             Capabilities=['CAPABILITY_IAM']
         )
