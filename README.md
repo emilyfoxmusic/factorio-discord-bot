@@ -89,7 +89,8 @@ responding.
 
 ### Pre-requisites
 
-* An AWS account, with billing set up.
+* An AWS account with a [default
+  VPC](https://docs.aws.amazon.com/vpc/latest/userguide/default-vpc.html).
   - For security it is strongly recommended to set up an IAM user specifically
     for the bot to use, see below for detail on permissions required.
 * Somewhere to run the bot itself.
