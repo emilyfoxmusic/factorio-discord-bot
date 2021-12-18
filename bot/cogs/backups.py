@@ -32,7 +32,7 @@ class Backups(commands.Cog):
                       help='Get the latest backup(s) for the game',
                       usage='[number=1] [game=associated with channel]')
     async def list_backups(self, ctx, *args):
-        number = args[0] if len(args) > 0 else 1
+        number = int(args[0]) if len(args) > 0 else 1
         game = (args[1] if len(args) > 1
                 else await game_mapping_helper.game_from_context(ctx, self.bot))
         if game is not None:
