@@ -163,7 +163,7 @@ Resources:
         ToPort: 2049
         IpProtocol: tcp
         SourceSecurityGroupId: !Ref Ec2Sg
-      VpcId: vpc-086407aabd11732aa
+      VpcId: !Ref VpcId
       
   # ====================================================
   # INSTANCE CONFIG
@@ -193,7 +193,7 @@ Resources:
           IpProtocol: tcp
           CidrIp: 0.0.0.0/0
         - !Ref 'AWS::NoValue'
-      VpcId: vpc-086407aabd11732aa
+      VpcId: !Ref VpcId
 
   LaunchConfiguration:
     Type: AWS::AutoScaling::LaunchConfiguration
