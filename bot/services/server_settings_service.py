@@ -19,8 +19,13 @@ async def set_default_settings(game):
         set_false('.visibility.lan'),
         set_string('.username', FACTORIO_USERNAME),
         set_string('.token', FACTORIO_TOKEN),
-        # we need this for our backup system to work as we always copy across the first save
-        set_number('.autosave_slots', 1)
+        # Saving every 8 minutes and using 2 slots means that:
+        # 1) when saving there is always another backup so if the server
+        # dies in the middle of saving we don't lose everything
+        # 2) 8 minutes seems like a decent balance between risk of
+        # losing work vs. interruption while the server saves
+        set_number('.autosave_slots', 2),
+        set_number('.autosave_interval', 8)
     )
     await ecs_client.restart_service(game)
 

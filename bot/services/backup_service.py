@@ -34,7 +34,8 @@ async def backup(game):
         f'--env AWS_ACCESS_KEY_ID={AWS_ACCESS_KEY_ID} ' +
         f'--env AWS_SECRET_ACCESS_KEY={AWS_SECRET_ACCESS_KEY} ' +
         '--rm amazon/aws-cli ' +
-        f's3 cp /saves/_autosave1.zip s3://{BUCKET_NAME}/{game}/{game_time}.zip --acl public-read')
+        's3 cp /saves/$(ls /opt/factorio/saves/ -t | head -n1) ' +
+        f's3://{BUCKET_NAME}/{game}/{game_time}.zip --acl public-read')
 
 
 async def list_backups(game):
