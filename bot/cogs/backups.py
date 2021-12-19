@@ -19,14 +19,16 @@ class Backups(commands.Cog):
     async def backup(self, ctx):
         game = await game_mapping_helper.game_from_context(ctx, self.bot)
         if game is not None:
-            await ctx.send('Taking a backup now...')
             status = await game_service.get_status(game)
             if status == status_helper.Status.RUNNING:
+                await ctx.send('Taking a backup now...')
                 await backup_service.backup(game)
                 await self.list_backups(ctx, 1)
             else:
                 await ctx.send(
-                    'Backups can only be taken when the server is running :no_entry_sign:')
+                    'Backups can only be taken when the server is running :no_entry_sign:\n' +
+                    'Note: backups are taken automatically when a server is stopped. You can ' +
+                    'use `!list-backups` to see the latest backup.')
 
     @commands.command(name='list-backups',
                       help='Get the latest backup(s) for the game',

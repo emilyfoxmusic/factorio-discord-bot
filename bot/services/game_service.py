@@ -23,7 +23,6 @@ async def delete_game(name):
         raise InvalidOperationException('Game not found')
     if await get_status(name) == status_helper.Status.DELETING:
         raise InvalidOperationException('Deletion already in progress')
-    await backup_service.backup(name)
     await stack_client.delete_stack(name)
     ip_service.purge_ip(name)
 
