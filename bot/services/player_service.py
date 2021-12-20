@@ -6,7 +6,7 @@ async def get_online_players(game):
     rcon_client = await rcon_service.get_rcon_client(game)
     players = rcon_client.get_online_players()
     if players == 'Online players (0):':
-        return 'There are no currently no players online.'
+        return None
     return players
 
 
@@ -15,5 +15,5 @@ async def get_all_players(game):
     rcon_client = await rcon_service.get_rcon_client(game)
     players = rcon_client.get_all_players()
     if players == 'Players (0):':
-        return 'This game has no players yet.'
+        return None
     return players
