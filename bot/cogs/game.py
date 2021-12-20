@@ -1,6 +1,7 @@
+import io
 import discord
 from discord.ext import commands
-from ..services import game_service, inactivity_service, channel_mapping_service
+from ..services import game_service, inactivity_service, channel_mapping_service, logs_service
 from ..helpers import status_helper, game_mapping_helper
 from ..utilities import random_string
 from .roles import FACTORIO_CATEGORY
@@ -52,6 +53,14 @@ class Game(commands.Cog):
         if game is not None:
             inactivity_service.reset_idle_counter(game)
             await ctx.send("Ok, I'll stick around for a bit longer :dancer:")
+
+    @commands.command(help='Get the Factorio logs (for debugging mods)')
+    async def debug(self, ctx, lines=20):
+        game = await game_mapping_helper.game_from_context(ctx, self.bot)
+        if game is not None:
+            logs = await logs_service.get_factorio_logs_tail(game, lines)
+            with io.StringIO(logs) as logs_file:
+                await ctx.send("Debug trace:", file=discord.File(logs_file, "logs.txt"))
 
     @commands.command(help='Permanently delete the game',
                       description="Permanently delete the game. The game and associated " +
