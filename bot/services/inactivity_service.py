@@ -2,6 +2,7 @@ from enum import Enum
 import logging
 from ..services import game_service, game_message_service, rcon_service
 from ..helpers import status_helper
+from ..exceptions import InvalidOperationException
 
 
 IDLE_TRACKERS = {}
@@ -15,34 +16,50 @@ async def auto_shutdown_loop(bot):
         status = games[game]
         if status != status_helper.Status.RUNNING:
             logging.info(
-                '%s is no longer running so will not be monitored for inactivity', game)
+                '%s is not running so will not be monitored for inactivity', game)
             _deregister_game(game)
         elif game not in IDLE_TRACKERS:
             logging.info('%s is now being monitored for inactivity', game)
             await _register_game(game)
         else:
-            logging.debug('Checking idle status for %s', game)
+            logging.info('Checking idle status for %s', game)
             idle_status = IDLE_TRACKERS[game].check_idle_status()
             previous_idle_status = PREVIOUS_IDLE_STATUSES.get(game)
+
+            if idle_status == previous_idle_status:
+                logging.info(
+                    'No change in idle status for %s - still %s', game, idle_status)
+                return
+
             # Only react when the status changes - not on every iteration
-            if idle_status != previous_idle_status:
-                logging.info('Idle status for %s has changed - was %s, now %s',
-                             game, previous_idle_status, idle_status)
-                if idle_status == IdleStatus.SHUTDOWN:
-                    logging.info('Stopping %s due to inactivity')
-                    await game_message_service.send_shutdown_notification(bot, game)
-                    await game_service.stop(game)
-                    await game_message_service.send_shutdown_finished(bot, game)
-                if idle_status == IdleStatus.WARNING:
-                    await game_message_service.send_shutdown_warning(bot, game)
-                if idle_status == IdleStatus.IDLE:
-                    await game_message_service.send_idle_message(bot, game)
+            logging.info('Idle status for %s has changed - was %s, now %s',
+                         game, previous_idle_status, idle_status)
             PREVIOUS_IDLE_STATUSES[game] = idle_status
+            if idle_status == IdleStatus.SHUTDOWN or idle_status == IdleStatus.UNKNOWN_SHUTDOWN:
+                logging.info('Stopping %s due to inactivity', game)
+                await game_message_service.send_shutdown_notification(bot, game)
+                try:
+                    force = previous_idle_status == IdleStatus.SHUTDOWN_FAILED
+                    logging.info('Stopping %s with force=%s', game, force)
+                    await game_service.stop(game, force)
+                    await game_message_service.send_shutdown_finished(bot, game)
+                except InvalidOperationException:
+                    await game_message_service.send_shutdown_failed(bot, game)
+                    logging.error(
+                        'Failed to stop %s, will use force next time', game)
+                    PREVIOUS_IDLE_STATUSES[game] = IdleStatus.SHUTDOWN_FAILED
+            if idle_status == IdleStatus.UNKNOWN_WARNING:
+                await game_message_service.send_unknown_idle_status_message(bot, game)
+            if idle_status == IdleStatus.WARNING:
+                await game_message_service.send_shutdown_warning(bot, game)
+            if idle_status == IdleStatus.IDLE:
+                await game_message_service.send_idle_message(bot, game)
 
 
 def reset_idle_counter(game):
     if game in IDLE_TRACKERS:
         IDLE_TRACKERS[game].reset_count()
+        PREVIOUS_IDLE_STATUSES[game] = None
 
 
 async def _register_game(game):
@@ -60,32 +77,51 @@ class IdleStatus(Enum):
     IDLE = 2
     WARNING = 3
     SHUTDOWN = 4
+    UNKNOWN = 5
+    UNKNOWN_WARNING = 6
+    UNKNOWN_SHUTDOWN = 7
+    SHUTDOWN_FAILED = 8
 
 
 WARNING_COUNT = 2
 SHUTDOWN_COUNT = 3
 
+# Only send an unknown warning if we see this twice in a row - it can happen
+# naturally if the stutdown loop runs while the server is starting up
+UNKNOWN_WARNING_COUNT = 2
+# Give the user enough time to respond and cancel the shutdown
+UNKNOWN_SHUTDOWN_COUNT = 5
+
 
 class IdleTracker():
     def __init__(self, rcon_client):
         self.rcon_client = rcon_client
-        self.game_time = self.rcon_client.game_time()
+        self.game_time = None
         self.idle_count = 0
+        self.unknown_count = 0
 
     def check_idle_status(self):
-        latest_game_time = self.rcon_client.game_time()
-        if latest_game_time == self.game_time:
-            self.idle_count += 1
-            if self.idle_count >= SHUTDOWN_COUNT:
-                return IdleStatus.SHUTDOWN
-            elif self.idle_count >= WARNING_COUNT:
-                return IdleStatus.WARNING
-            else:
+        try:
+            latest_game_time = self.rcon_client.game_time()
+            self.unknown_count = 0
+            if self.game_time is not None and latest_game_time == self.game_time:
+                self.idle_count += 1
+                if self.idle_count >= SHUTDOWN_COUNT:
+                    return IdleStatus.SHUTDOWN
+                if self.idle_count >= WARNING_COUNT:
+                    return IdleStatus.WARNING
                 return IdleStatus.IDLE
-        else:
             self.game_time = latest_game_time
             self.idle_count = 0
             return IdleStatus.IN_USE
+        except Exception:  # pylint: disable=broad-except
+            self.unknown_count += 1
+            if self.unknown_count >= UNKNOWN_SHUTDOWN_COUNT:
+                return IdleStatus.UNKNOWN_SHUTDOWN
+            if self.unknown_count >= UNKNOWN_WARNING_COUNT:
+                return IdleStatus.UNKNOWN_WARNING
+            return IdleStatus.UNKNOWN
 
     def reset_count(self):
         self.idle_count = 0
+        self.unknown_count = 0

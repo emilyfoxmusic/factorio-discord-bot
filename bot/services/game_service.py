@@ -43,10 +43,16 @@ async def start(name):
             'Please wait - another operation is in progress')
 
 
-async def stop(name):
+async def stop(name, force):
     status = await get_status(name)
     if status == status_helper.Status.RUNNING or status == status_helper.Status.UNRECOGNISED:
-        await backup_service.backup(name)
+        try:
+            await backup_service.backup(name)
+        except Exception as error:  # pylint: disable=broad-except
+            if not force:
+                raise InvalidOperationException(
+                    "Taking backup failed. If you'd like to stop the server anyway, use " +
+                    "`!stop force`") from error
         await stack_client.update_stack(name, 'Stopped')
         ip_service.purge_ip(name)
     elif status == status_helper.Status.STOPPING or status == status_helper.Status.STOPPED:

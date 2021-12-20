@@ -28,12 +28,20 @@ class Game(commands.Cog):
             ip = await game_service.get_ip(game)
             await ctx.send(f'Successfully started at `{ip}` :tada:')
 
-    @commands.command(help='Stop the game server')
-    async def stop(self, ctx):
+    @commands.command(help='Stop the game server',
+                      usage='[force]',
+                      description="Stops the game server. Use the 'force' option " +
+                      "(`!stop force`) if you'd like to stop the server even if the " +
+                      "backup fails.")
+    async def stop(self, ctx, *args):
         game = await game_mapping_helper.game_from_context(ctx, self.bot)
+        force = len(args) > 0 and args[0].lower() == 'force'
         if game is not None:
-            await ctx.send('Taking a backup and stopping server...')
-            await game_service.stop(game)
+            if force:
+                await ctx.send('Stopping the server, even if the backup fails... :muscle:')
+            else:
+                await ctx.send('Taking a backup and stopping the server...')
+            await game_service.stop(game, force)
             await ctx.send('Successfully stopped, goodbye :wave: ' +
                            '(Use `!list-backups` to get latest backup.)')
 
