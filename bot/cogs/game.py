@@ -55,7 +55,7 @@ class Game(commands.Cog):
         force = len(args) > 0 and args[0].lower() == 'force'
         if game is not None:
             if force:
-                await ctx.send('Stopping the server, even if the backup fails... :muscle:')
+                await ctx.send('Stopping the server... :muscle:')
             else:
                 await ctx.send('Taking a backup and stopping the server...')
             await game_service.stop(game, force)
@@ -92,9 +92,15 @@ class Game(commands.Cog):
         game = await game_mapping_helper.game_from_context(ctx, self.bot)
         if game is not None:
             all_players = len(args) > 0 and args[0].lower() == 'all'
-            players = (await player_service.get_all_players(game) if all_players
-                       else await player_service.get_online_players(game))
-            await ctx.send(players)
+            if all_players:
+                players = await player_service.get_all_players(game)
+                message = 'This game has no players yet.' if players is None else players
+                await ctx.send(message)
+            else:
+                players = await player_service.get_online_players(game)
+                message = (
+                    'There are no currently no players online.' if players is None else players)
+                await ctx.send(message)
 
     @commands.command(help='Permanently delete the game',
                       description="Permanently delete the game. The game and associated " +

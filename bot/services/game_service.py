@@ -1,36 +1,37 @@
+from factorio_rcon import RCONBaseError
 from ..exceptions import InvalidOperationException
 from ..clients import stack_client
-from ..services import (mod_service, ip_service,
+from ..services import (mod_service, ip_service, player_service,
                         backup_service, server_settings_service, status_service)
 from ..services.status_service import Status
 
 
-async def create_game(name, version, *mods):
-    if await game_exists(name):
+async def create_game(game, version, *mods):
+    if await game_exists(game):
         raise InvalidOperationException('Game already exists')
     # We must check the mods *before* creating the stack in case they are invalid
     # Note this also happens to check the version is syntactically correct, so it's
     # worth running even with no mods.
     mod_releases = await mod_service.get_releases(version, *mods)
-    await stack_client.create_stack(name, version)
+    await stack_client.create_stack(game, version)
     if len(mod_releases) > 0:
-        await mod_service.install_releases(name, mod_releases)
-    await server_settings_service.set_default_settings(name)
+        await mod_service.install_releases(game, mod_releases)
+    await server_settings_service.set_default_settings(game)
 
 
-async def delete_game(name):
-    if not await game_exists(name):
+async def delete_game(game):
+    if not await game_exists(game):
         raise InvalidOperationException('Game not found')
-    if await status_service.get_status(name) == status_service.Status.DELETING:
+    if await status_service.get_status(game) == status_service.Status.DELETING:
         raise InvalidOperationException('Deletion already in progress')
-    await stack_client.delete_stack(name)
-    ip_service.purge_ip(name)
+    await stack_client.delete_stack(game)
+    ip_service.purge_ip(game)
 
 
-async def start(name):
-    status = await status_service.get_status(name)
+async def start(game):
+    status = await status_service.get_status(game)
     if status == Status.STOPPED or status == Status.UNRECOGNISED:
-        await stack_client.update_stack(name, 'Running')
+        await stack_client.update_stack(game, 'Running')
     elif status == Status.STARTING or status == Status.RUNNING:
         raise InvalidOperationException('Server is already running/starting')
     else:
@@ -38,18 +39,23 @@ async def start(name):
             'Please wait - another operation is in progress')
 
 
-async def stop(name, force):
-    status = await status_service.get_status(name)
+async def stop(game, force):
+    status = await status_service.get_status(game)
     if status == Status.RUNNING or status == Status.UNRECOGNISED:
         try:
-            await backup_service.backup(name)
-        except Exception as error:  # pylint: disable=broad-except
+            players = await player_service.get_online_players(game)
+            if players is not None:
+                raise InvalidOperationException(
+                    "I won't stop the server while someone is playing! :upside_down:")
+            await backup_service.backup(game)
+        except RCONBaseError as error:
             if not force:
                 raise InvalidOperationException(
-                    "Taking backup failed. If you'd like to stop the server anyway, use " +
-                    "`!stop force`") from error
-        await stack_client.update_stack(name, 'Stopped')
-        ip_service.purge_ip(name)
+                    "Failed to connect to the server to check whether there are any online " +
+                    "players and to take the backup. If you'd like to stop the server anyway, " +
+                    "use `!stop force`") from error
+        await stack_client.update_stack(game, 'Stopped')
+        ip_service.purge_ip(game)
     elif status == Status.STOPPING or status == Status.STOPPED:
         raise InvalidOperationException('Server is already stopped/stopping')
     else:
@@ -57,5 +63,5 @@ async def stop(name, force):
             'Please wait - another operation is in progress')
 
 
-async def game_exists(name):
-    return name in await status_service.list_game_statuses()
+async def game_exists(game):
+    return game in await status_service.list_game_statuses()
