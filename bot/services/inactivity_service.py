@@ -48,7 +48,7 @@ async def auto_shutdown_loop(bot):
                     logging.error(
                         'Failed to stop %s, will use force next time', game)
                     PREVIOUS_IDLE_STATUSES[game] = IdleStatus.SHUTDOWN_FAILED
-            if idle_status == IdleStatus.UNKNOWN:
+            if idle_status == IdleStatus.UNKNOWN_WARNING:
                 await game_message_service.send_unknown_idle_status_message(bot, game)
             if idle_status == IdleStatus.WARNING:
                 await game_message_service.send_shutdown_warning(bot, game)
@@ -78,14 +78,19 @@ class IdleStatus(Enum):
     WARNING = 3
     SHUTDOWN = 4
     UNKNOWN = 5
-    UNKNOWN_SHUTDOWN = 6
-    SHUTDOWN_FAILED = 7
+    UNKNOWN_WARNING = 6
+    UNKNOWN_SHUTDOWN = 7
+    SHUTDOWN_FAILED = 8
 
 
 WARNING_COUNT = 2
 SHUTDOWN_COUNT = 3
 
-UNKNOWN_SHUTDOWN_COUNT = 3
+# Only send an unknown warning if we see this twice in a row - it can happen
+# naturally if the stutdown loop runs while the server is starting up
+UNKNOWN_WARNING_COUNT = 2
+# Give the user enough time to respond and cancel the shutdown
+UNKNOWN_SHUTDOWN_COUNT = 5
 
 
 class IdleTracker():
@@ -99,7 +104,7 @@ class IdleTracker():
         try:
             latest_game_time = self.rcon_client.game_time()
             self.unknown_count = 0
-            if latest_game_time == self.game_time:
+            if self.game_time is not None and latest_game_time == self.game_time:
                 self.idle_count += 1
                 if self.idle_count >= SHUTDOWN_COUNT:
                     return IdleStatus.SHUTDOWN
@@ -113,6 +118,8 @@ class IdleTracker():
             self.unknown_count += 1
             if self.unknown_count >= UNKNOWN_SHUTDOWN_COUNT:
                 return IdleStatus.UNKNOWN_SHUTDOWN
+            if self.unknown_count >= UNKNOWN_WARNING_COUNT:
+                return IdleStatus.UNKNOWN_WARNING
             return IdleStatus.UNKNOWN
 
     def reset_count(self):
