@@ -61,10 +61,19 @@ def download_command(release):
             f'--output /opt/factorio/mods/{file_name}')
 
 
+VERSION_MAPPING = {
+    'latest': 'experimental',
+    'stable': 'stable'
+}
+
+
 def get_absolute_version(version_param):
-    if version_param == 'latest' or version_param == 'stable':
+    if version_param in VERSION_MAPPING:
         latest_releases = factorio_client.client.get_latest_releases()
-        absolute_version = latest_releases['experimental' if version_param ==
-                                           'latest' else 'stable']['headless']
+        api_version = VERSION_MAPPING[version_param]
+        if not api_version in latest_releases or not 'headless' in latest_releases[api_version]:
+            raise InvalidOperationException(
+                'Version {version_param} is not currently available.')
+        absolute_version = latest_releases[api_version]['headless']
         return parse(absolute_version)
     return parse(version_param)
