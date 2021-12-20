@@ -1,3 +1,4 @@
+from factorio_rcon import RCONBaseError
 from ..exceptions import InvalidOperationException
 from ..clients import stack_client
 from ..services import (mod_service, ip_service, player_service,
@@ -41,17 +42,18 @@ async def start(game):
 async def stop(game, force):
     status = await status_service.get_status(game)
     if status == Status.RUNNING or status == Status.UNRECOGNISED:
-        players = await player_service.get_online_players(game)
-        if players is not None:
-            raise InvalidOperationException(
-                "I won't stop the server while someone is playing! :upside_down:")
         try:
+            players = await player_service.get_online_players(game)
+            if players is not None:
+                raise InvalidOperationException(
+                    "I won't stop the server while someone is playing! :upside_down:")
             await backup_service.backup(game)
-        except Exception as error:  # pylint: disable=broad-except
+        except RCONBaseError as error:
             if not force:
                 raise InvalidOperationException(
-                    "Taking backup failed. If you'd like to stop the server anyway, use " +
-                    "`!stop force`") from error
+                    "Failed to connect to the server to check whether there are any online " +
+                    "players and to take the backup. If you'd like to stop the server anyway, " +
+                    "use `!stop force`") from error
         await stack_client.update_stack(game, 'Stopped')
         ip_service.purge_ip(game)
     elif status == Status.STOPPING or status == Status.STOPPED:

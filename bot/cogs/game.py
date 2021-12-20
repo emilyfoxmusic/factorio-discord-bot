@@ -55,7 +55,7 @@ class Game(commands.Cog):
         force = len(args) > 0 and args[0].lower() == 'force'
         if game is not None:
             if force:
-                await ctx.send('Stopping the server, even if the backup fails... :muscle:')
+                await ctx.send('Stopping the server... :muscle:')
             else:
                 await ctx.send('Taking a backup and stopping the server...')
             await game_service.stop(game, force)
