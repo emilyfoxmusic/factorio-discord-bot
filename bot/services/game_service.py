@@ -16,7 +16,7 @@ async def create_game(game, version, *mods):
     await stack_client.create_stack(game, version)
     if len(mod_releases) > 0:
         await mod_service.install_releases(game, mod_releases)
-    await server_settings_service.set_default_settings(game)
+    await server_settings_service.set_default_config(game)
 
 
 async def delete_game(game):
