@@ -73,7 +73,7 @@ def get_absolute_version(version_param):
         api_version = VERSION_MAPPING[version_param]
         if not api_version in latest_releases or not 'headless' in latest_releases[api_version]:
             raise InvalidOperationException(
-                'Version {version_param} is not currently available.')
+                f'Version {version_param} is not currently available.')
         absolute_version = latest_releases[api_version]['headless']
         return parse(absolute_version)
     return parse(version_param)
