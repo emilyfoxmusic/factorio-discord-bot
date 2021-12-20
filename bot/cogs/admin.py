@@ -2,7 +2,7 @@ import re
 import discord
 from discord import ChannelType
 from discord.ext import commands
-from ..services import channel_mapping_service, game_service, ip_service
+from ..services import channel_mapping_service, game_service, ip_service, status_service
 from .roles import FACTORIO_CATEGORY
 
 name_pattern = re.compile("^[A-Za-z][A-Za-z0-9-]*$")
@@ -54,7 +54,7 @@ class Admin(commands.Cog):
 
     @commands.command(help='List all games and their current statuses')
     async def list(self, ctx):
-        games = await game_service.list_games()
+        games = await status_service.list_game_statuses()
         if len(games) == 0:
             await ctx.send('There are no games at the moment. Create a new one with `!new`.')
             return

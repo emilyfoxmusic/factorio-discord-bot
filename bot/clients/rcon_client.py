@@ -6,16 +6,21 @@ class RconClient():
         self.ip = ip
         self.rcon_pw = rcon_pw
 
-    def game_time(self):
+    def _send_command(self, command):
         rcon_client = factorio_rcon.RCONClient(self.ip, 27015, self.rcon_pw)
         try:
-            return rcon_client.send_command("/time")
+            return rcon_client.send_command(command)
         finally:
             rcon_client.close()
 
+    def game_time(self):
+        return self._send_command("/time")
+
     def save(self):
-        rcon_client = factorio_rcon.RCONClient(self.ip, 27015, self.rcon_pw)
-        try:
-            return rcon_client.send_command("/server-save")
-        finally:
-            rcon_client.close()
+        return self._send_command("/server-save")
+
+    def get_online_players(self):
+        return self._send_command("/players online")
+
+    def get_all_players(self):
+        return self._send_command("/players")

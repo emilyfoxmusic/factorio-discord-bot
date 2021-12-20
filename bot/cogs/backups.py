@@ -1,7 +1,8 @@
 import discord
 from discord.ext import commands
-from ..services import backup_service, game_service
-from ..helpers import game_mapping_helper, status_helper
+from ..services import backup_service, status_service
+from ..helpers import game_mapping_helper
+from ..services.status_service import Status
 
 
 class Backups(commands.Cog):
@@ -19,8 +20,8 @@ class Backups(commands.Cog):
     async def backup(self, ctx):
         game = await game_mapping_helper.game_from_context(ctx, self.bot)
         if game is not None:
-            status = await game_service.get_status(game)
-            if status == status_helper.Status.RUNNING:
+            status = await status_service.get_status(game)
+            if status == Status.RUNNING:
                 await ctx.send('Taking a backup now...')
                 await backup_service.backup(game)
                 await self.list_backups(ctx, 1)

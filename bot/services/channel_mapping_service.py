@@ -1,6 +1,6 @@
 import discord
 from ..clients import channel_mapping_client
-from ..services import game_service
+from ..services import status_service
 
 
 async def init_channel_table():
@@ -32,7 +32,7 @@ async def remove_mappings(guild_id, channel_id=None):
 
 async def validate_mappings(bot):
     all_mappings = await channel_mapping_client.get_all_mappings()
-    games = await game_service.list_games()
+    games = await status_service.list_game_statuses()
     invalid_mappings = list(
         filter(lambda mapping: not mapping_is_valid(mapping, bot, games), all_mappings))
     if len(invalid_mappings) > 0:

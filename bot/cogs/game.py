@@ -1,10 +1,22 @@
 import io
 import discord
 from discord.ext import commands
-from ..services import game_service, inactivity_service, channel_mapping_service, logs_service
-from ..helpers import status_helper, game_mapping_helper
+from ..services import (game_service, inactivity_service, status_service,
+                        channel_mapping_service, logs_service, player_service, ip_service)
+from ..services.status_service import Status
+from ..helpers import game_mapping_helper
 from ..utilities import random_string
 from .roles import FACTORIO_CATEGORY
+
+
+STATUSES_TO_MESSAGES = {
+    Status.CREATING: 'The game is being created as we speak :baby:',
+    Status.RUNNING: 'The game is running! Go make some factories :tada:',
+    Status.STOPPED: 'The game is currently stopped. Use `!start` to play! :factory_worker:',
+    Status.STARTING: 'The game is starting up... get hyped :partying_face:',
+    Status.STOPPING: 'The game is shutting down... see you again soon! :cry:',
+    Status.DELETING: 'The game is being deleted RIP :skull_crossbones:',
+}
 
 
 class Game(commands.Cog):
@@ -16,8 +28,13 @@ class Game(commands.Cog):
     async def status(self, ctx):
         game = await game_mapping_helper.game_from_context(ctx, self.bot)
         if game is not None:
-            status = await game_service.get_status(game)
-            await ctx.send(status_helper.message(status))
+            status = await status_service.get_status(game)
+            message_for_status = STATUSES_TO_MESSAGES.get(status)
+            if message_for_status is not None:
+                await ctx.send(message_for_status)
+            else:
+                await ctx.send('Something is amiss - the stack state is not in an expected ' +
+                               'state. Some debugging may be required... :detective:')
 
     @commands.command(help='Start the game server')
     async def start(self, ctx):
@@ -25,7 +42,7 @@ class Game(commands.Cog):
         if game is not None:
             await ctx.send('Starting server...')
             await game_service.start(game)
-            ip = await game_service.get_ip(game)
+            ip = await ip_service.get_ip(game)
             await ctx.send(f'Successfully started at `{ip}` :tada:')
 
     @commands.command(help='Stop the game server',
@@ -45,11 +62,11 @@ class Game(commands.Cog):
             await ctx.send('Successfully stopped, goodbye :wave: ' +
                            '(Use `!list-backups` to get latest backup.)')
 
-    @commands.command(help='Get the IP address for the game (if running)')
+    @commands.command(help='Get the current IP address for the game (if running)')
     async def ip(self, ctx):
         game = await game_mapping_helper.game_from_context(ctx, self.bot)
         if game is not None:
-            ip = await game_service.get_ip(game)
+            ip = await ip_service.get_ip(game)
             await ctx.send(f'Join at `{ip}` :construction:')
 
     @commands.command(help='Reset the server auto-shutdown timer',
@@ -69,6 +86,15 @@ class Game(commands.Cog):
             logs = await logs_service.get_factorio_logs_tail(game, lines)
             with io.StringIO(logs) as logs_file:
                 await ctx.send("Debug trace:", file=discord.File(logs_file, "logs.txt"))
+
+    @commands.command(help='Get the players for the game (if running)', usage='[all]')
+    async def players(self, ctx, *args):
+        game = await game_mapping_helper.game_from_context(ctx, self.bot)
+        if game is not None:
+            all_players = len(args) > 0 and args[0].lower() == 'all'
+            players = (await player_service.get_all_players(game) if all_players
+                       else await player_service.get_online_players(game))
+            await ctx.send(players)
 
     @commands.command(help='Permanently delete the game',
                       description="Permanently delete the game. The game and associated " +
