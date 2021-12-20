@@ -1,4 +1,7 @@
 from enum import Enum
+from ..clients import stack_client
+from ..exceptions import InvalidOperationException
+from ..utilities import single
 
 
 class Status(Enum):
@@ -11,7 +14,29 @@ class Status(Enum):
     UNRECOGNISED = 7
 
 
-def get_status(stack_status, server_state_param):
+async def list_game_statuses():
+    stacks = await stack_client.list_stacks()
+    return {stack['StackName']: _get_status_from_stack(stack) for stack in stacks}
+
+
+async def get_status(name):
+    stack = await stack_client.stack_details(name)
+    return _get_status_from_stack(stack)
+
+
+async def check_game_is_running(game):
+    status = await get_status(game)
+    if status != Status.RUNNING:
+        raise InvalidOperationException(
+            'The server must be running to do that.')
+
+
+def _get_status_from_stack(stack):
+    stack_status = stack['StackStatus']
+    server_state_param = single(
+        lambda parameter: parameter['ParameterKey'] == 'ServerState',
+        stack['Parameters'])['ParameterValue']
+
     if stack_status == 'CREATE_IN_PROGRESS':
         return Status.CREATING
     if stack_status == 'DELETE_PENDING' or stack_status == 'DELETE_IN_PROGRESS':
@@ -34,21 +59,3 @@ def get_status(stack_status, server_state_param):
                 f'Server state parameter: {server_state_param} is not recognised.')
     else:
         return Status.UNRECOGNISED
-
-
-STATUSES_TO_MESSAGES = {
-    Status.CREATING: 'The game is being created as we speak :baby:',
-    Status.RUNNING: 'The game is running! Go make some factories :tada:',
-    Status.STOPPED: 'The game is currently stopped. Use `!start` to play! :factory_worker:',
-    Status.STARTING: 'The game is starting up... get hyped :partying_face:',
-    Status.STOPPING: 'The game is shutting down... see you again soon! :cry:',
-    Status.DELETING: 'The game is being deleted RIP :skull_crossbones:',
-}
-
-
-def message(status):
-    message_for_status = STATUSES_TO_MESSAGES.get(status)
-    if message_for_status is not None:
-        return message_for_status
-    return ('Something is amiss - the stack state is not in an expected state. ' +
-            'Some debugging may be required... :detective:')

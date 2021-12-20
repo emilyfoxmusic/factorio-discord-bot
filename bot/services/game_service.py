@@ -1,8 +1,8 @@
 from ..exceptions import InvalidOperationException
 from ..clients import stack_client
-from ..services import mod_service, ip_service, backup_service, server_settings_service
-from ..helpers import status_helper
-from ..utilities import single
+from ..services import (mod_service, ip_service,
+                        backup_service, server_settings_service, status_service)
+from ..services.status_service import Status
 
 
 async def create_game(name, version, *mods):
@@ -21,22 +21,17 @@ async def create_game(name, version, *mods):
 async def delete_game(name):
     if not await game_exists(name):
         raise InvalidOperationException('Game not found')
-    if await get_status(name) == status_helper.Status.DELETING:
+    if await status_service.get_status(name) == status_service.Status.DELETING:
         raise InvalidOperationException('Deletion already in progress')
     await stack_client.delete_stack(name)
     ip_service.purge_ip(name)
 
 
-async def get_status(name):
-    stack = await stack_client.stack_details(name)
-    return _status_from_stack(stack)
-
-
 async def start(name):
-    status = await get_status(name)
-    if status == status_helper.Status.STOPPED or status == status_helper.Status.UNRECOGNISED:
+    status = await status_service.get_status(name)
+    if status == Status.STOPPED or status == Status.UNRECOGNISED:
         await stack_client.update_stack(name, 'Running')
-    elif status == status_helper.Status.STARTING or status == status_helper.Status.RUNNING:
+    elif status == Status.STARTING or status == Status.RUNNING:
         raise InvalidOperationException('Server is already running/starting')
     else:
         raise InvalidOperationException(
@@ -44,8 +39,8 @@ async def start(name):
 
 
 async def stop(name, force):
-    status = await get_status(name)
-    if status == status_helper.Status.RUNNING or status == status_helper.Status.UNRECOGNISED:
+    status = await status_service.get_status(name)
+    if status == Status.RUNNING or status == Status.UNRECOGNISED:
         try:
             await backup_service.backup(name)
         except Exception as error:  # pylint: disable=broad-except
@@ -55,31 +50,12 @@ async def stop(name, force):
                     "`!stop force`") from error
         await stack_client.update_stack(name, 'Stopped')
         ip_service.purge_ip(name)
-    elif status == status_helper.Status.STOPPING or status == status_helper.Status.STOPPED:
+    elif status == Status.STOPPING or status == Status.STOPPED:
         raise InvalidOperationException('Server is already stopped/stopping')
     else:
         raise InvalidOperationException(
             'Please wait - another operation is in progress')
 
 
-async def get_ip(name):
-    status = await get_status(name)
-    if status == status_helper.Status.RUNNING:
-        return await ip_service.get_ip(name)
-    else:
-        raise InvalidOperationException('Server is not running (yet?)')
-
-
-async def list_games():
-    stacks = await stack_client.list_stacks()
-    return {stack['StackName']: _status_from_stack(stack) for stack in stacks}
-
-
 async def game_exists(name):
-    return name in await list_games()
-
-
-def _status_from_stack(stack):
-    server_state_param = single(
-        lambda parameter: parameter['ParameterKey'] == 'ServerState', stack['Parameters'])
-    return status_helper.get_status(stack['StackStatus'], server_state_param['ParameterValue'])
+    return name in await status_service.list_game_statuses()

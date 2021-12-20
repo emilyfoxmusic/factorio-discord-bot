@@ -1,8 +1,8 @@
 from enum import Enum
 import logging
-from ..services import game_service, game_message_service, rcon_service
-from ..helpers import status_helper
+from ..services import game_service, game_message_service, rcon_service, status_service
 from ..exceptions import InvalidOperationException
+from ..services.status_service import Status
 
 
 IDLE_TRACKERS = {}
@@ -11,10 +11,10 @@ PREVIOUS_IDLE_STATUSES = {}
 
 async def auto_shutdown_loop(bot):
     logging.info('Running auto-shutdown loop')
-    games = await game_service.list_games()
+    games = await status_service.list_game_statuses()
     for game in games:
         status = games[game]
-        if status != status_helper.Status.RUNNING:
+        if status != Status.RUNNING:
             logging.info(
                 '%s is not running so will not be monitored for inactivity', game)
             _deregister_game(game)
