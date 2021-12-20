@@ -2,7 +2,7 @@ import io
 import discord
 from discord.ext import commands
 from ..services import (game_service, inactivity_service, status_service,
-                        channel_mapping_service, logs_service, ip_service)
+                        channel_mapping_service, logs_service, player_service, ip_service)
 from ..services.status_service import Status
 from ..helpers import game_mapping_helper
 from ..utilities import random_string
@@ -86,6 +86,15 @@ class Game(commands.Cog):
             logs = await logs_service.get_factorio_logs_tail(game, lines)
             with io.StringIO(logs) as logs_file:
                 await ctx.send("Debug trace:", file=discord.File(logs_file, "logs.txt"))
+
+    @commands.command(help='Get the players for the game (if running)', usage='[all]')
+    async def players(self, ctx, *args):
+        game = await game_mapping_helper.game_from_context(ctx, self.bot)
+        if game is not None:
+            all_players = len(args) > 0 and args[0].lower() == 'all'
+            players = (await player_service.get_all_players(game) if all_players
+                       else await player_service.get_online_players(game))
+            await ctx.send(players)
 
     @commands.command(help='Permanently delete the game',
                       description="Permanently delete the game. The game and associated " +

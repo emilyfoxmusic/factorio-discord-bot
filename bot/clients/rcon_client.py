@@ -18,3 +18,9 @@ class RconClient():
 
     def save(self):
         return self._send_command("/server-save")
+
+    def get_online_players(self):
+        return self._send_command("/players online")
+
+    def get_all_players(self):
+        return self._send_command("/players")
