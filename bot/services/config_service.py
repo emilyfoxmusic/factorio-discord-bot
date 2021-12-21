@@ -22,12 +22,12 @@ async def set_default_config(game):
         ip,
         INSTALL_JQ,
         f'sudo chmod 666 {SERVER_CONFIG_FILE}',
-        write_setting_string('.name', game),
-        write_setting_string('.description', ''),
-        write_setting_false('.visibility.public'),
-        write_setting_false('.visibility.lan'),
-        write_setting_string('.username', FACTORIO_USERNAME),
-        write_setting_string('.token', FACTORIO_TOKEN),
+        _write_setting_string('.name', game),
+        _write_setting_string('.description', ''),
+        _write_setting_false('.visibility.public'),
+        _write_setting_false('.visibility.lan'),
+        _write_setting_string('.username', FACTORIO_USERNAME),
+        _write_setting_string('.token', FACTORIO_TOKEN),
         # Saving every 8 minutes and using 2 slots means that:
         # 1) when saving there is always another backup so if the server
         # dies in the middle of saving we don't lose everything
@@ -42,8 +42,14 @@ async def set_default_config(game):
     await ecs_client.restart_service(game)
 
 
+async def get_admins(game):
+    ip = await ip_service.get_ip(game)
+    ssh_client.execute(ip, INSTALL_JQ)
+    return ssh_client.execute_get(ip, f'jq \'. | join(",")\' -r {ADMIN_LIST_FILE}').split(',')
+
+
 async def add_admins(game, players):
-    await modify_admins(
+    await _modify_admins(
         game,
         players,
         lambda existing_admins: lambda player: player in existing_admins,
@@ -52,7 +58,7 @@ async def add_admins(game, players):
 
 
 async def remove_admins(game, players):
-    await modify_admins(
+    await _modify_admins(
         game,
         players,
         lambda existing_admins: lambda player: player not in existing_admins,
@@ -60,7 +66,7 @@ async def remove_admins(game, players):
         '-')
 
 
-async def modify_admins(game, players, get_invalid_players, invalid_message, jq_operator):
+async def _modify_admins(game, players, get_invalid_players, invalid_message, jq_operator):
     if any(not player_pattern.match(player) for player in players):
         raise InvalidOperationException(
             'Player names must only contain letters, numbers, full-stops and hyphens')
@@ -75,26 +81,20 @@ async def modify_admins(game, players, get_invalid_players, invalid_message, jq_
     ssh_client.execute(
         ip,
         INSTALL_JQ,
-        write_file(ADMIN_LIST_FILE, f'jq \'. {jq_operator} {json_players}\''))
+        _write_file(ADMIN_LIST_FILE, f'jq \'. {jq_operator} {json_players}\''))
 
 
-async def get_admins(game):
-    ip = await ip_service.get_ip(game)
-    ssh_client.execute(ip, INSTALL_JQ)
-    return ssh_client.execute_get(ip, f'jq \'. | join(",")\' -r {ADMIN_LIST_FILE}').split(',')
-
-
-def write_file(file, expression):
+def _write_file(file, expression):
     return f"cat <<< $({expression} {file}) > {file}"
 
 
-def write_setting_false(path):
-    return write_file(SERVER_CONFIG_FILE, f"jq '{path} = false'")
+def _write_setting_false(path):
+    return _write_file(SERVER_CONFIG_FILE, f"jq '{path} = false'")
 
 
-def write_setting_string(path, value):
-    return write_file(SERVER_CONFIG_FILE, f'jq \'{path} = "{value}"\'')
+def _write_setting_string(path, value):
+    return _write_file(SERVER_CONFIG_FILE, f'jq \'{path} = "{value}"\'')
 
 
 def write_setting_number(path, value):
-    return write_file(SERVER_CONFIG_FILE, f"jq '{path} = {value}'")
+    return _write_file(SERVER_CONFIG_FILE, f"jq '{path} = {value}'")

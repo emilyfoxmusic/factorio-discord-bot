@@ -1,13 +1,12 @@
 import io
 import discord
 from discord.ext import commands
-from ..services import (game_service, inactivity_service, status_service, server_settings_service,
+from ..services import (game_service, inactivity_service, status_service,
                         channel_mapping_service, logs_service, player_service, ip_service)
 from ..services.status_service import Status
 from ..helpers import game_mapping_helper
 from ..utilities import random_string
 from .roles import FACTORIO_CATEGORY
-from ..clients import ecs_client
 
 STATUSES_TO_MESSAGES = {
     Status.CREATING: 'The game is being created as we speak :baby:',
@@ -62,22 +61,13 @@ class Game(commands.Cog):
             await ctx.send('Successfully stopped, goodbye :wave: ' +
                            '(Use `!list-backups` to get latest backup.)')
 
-    @commands.command(help='Get the current IP address for the game (if running)')
+    @commands.command(help='Get the current IP address for the game')
     async def ip(self, ctx):
         game = await game_mapping_helper.game_from_context(ctx, self.bot)
         if game is not None:
             ip = await ip_service.get_ip(game)
             await ctx.send(f'Join at `{ip}` :construction:')
 
-    @commands.command(help='Reset the server auto-shutdown timer',
-                      decription="When this command is invoked, the auto-shutdown " +
-                      "resets and the game will stay up for another 30mins.",
-                      name="let-me-live")
-    async def let_me_live(self, ctx):
-        game = await game_mapping_helper.game_from_context(ctx, self.bot)
-        if game is not None:
-            inactivity_service.reset_idle_counter(game)
-            await ctx.send("Ok, I'll stick around for a bit longer :dancer:")
 
     @commands.command(help='Get the Factorio logs (for debugging mods)')
     async def debug(self, ctx, lines=20):
@@ -87,7 +77,7 @@ class Game(commands.Cog):
             with io.StringIO(logs) as logs_file:
                 await ctx.send("Debug trace:", file=discord.File(logs_file, "logs.txt"))
 
-    @commands.command(help='Get the players for the game (if running)', usage='[all]')
+    @commands.command(help='Get the players for the game', usage='[all]')
     async def players(self, ctx, *args):
         game = await game_mapping_helper.game_from_context(ctx, self.bot)
         if game is not None:
@@ -137,40 +127,3 @@ class Game(commands.Cog):
                 await ctx.send(':no_entry_sign: Confirmation phrase did not match - to confirm ' +
                                'the delete, use ' +
                                f'`!delete {self.confirmation_phrases[game]}`')
-
-    @commands.command(help='Get the current admins')
-    async def admins(self, ctx):
-        game = await game_mapping_helper.game_from_context(ctx, self.bot)
-        if game is not None:
-            current_admins = await server_settings_service.get_admins(game)
-            if any(current_admins):
-                await ctx.send(f'Current admins are: {", ".join(current_admins)}. ' +
-                               '(Restart may be required.)')
-            else:
-                await ctx.send('There are no current admins. (Restart may be required.)')
-
-    @commands.command(help='Give player(s) admin permissions', name='admins-add')
-    async def admins_add(self, ctx, *players):
-        game = await game_mapping_helper.game_from_context(ctx, self.bot)
-        if game is not None:
-            await server_settings_service.add_admins(game, players)
-            await ctx.send('Admins have been added, but **you will need to restart the ' +
-                           'server for this to take effect** (use `!restart`).')
-
-    @commands.command(help='Revoke admin permissions for player(s)', name='admins-remove')
-    async def admins_remove(self, ctx, *players):
-        game = await game_mapping_helper.game_from_context(ctx, self.bot)
-        if game is not None:
-            await server_settings_service.remove_admins(game, players)
-            await ctx.send('Admins have been removed, but **you will need to restart the ' +
-                           'server for this to take effect** (use `!restart`).')
-
-    @commands.command(help='Restart the server',
-                      description='This is required for any config changes to take effect.')
-    async def restart(self, ctx):
-        game = await game_mapping_helper.game_from_context(ctx, self.bot)
-        if game is not None:
-            await status_service.check_game_is_running(game)
-            await ctx.send('Restarting server...')
-            await ecs_client.restart_service(game)
-            await ctx.send('Server has been restarted :hatching_chick:')

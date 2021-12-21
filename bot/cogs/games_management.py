@@ -8,7 +8,7 @@ from .roles import FACTORIO_CATEGORY
 name_pattern = re.compile("^[A-Za-z][A-Za-z0-9-]*$")
 
 
-class Admin(commands.Cog):
+class GamesManagement(commands.Cog, name="Managing Games"):
     def __init__(self, bot):
         self.bot = bot
 
