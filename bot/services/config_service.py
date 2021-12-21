@@ -33,8 +33,8 @@ async def set_default_config(game):
         # dies in the middle of saving we don't lose everything
         # 2) 8 minutes seems like a decent balance between risk of
         # losing work vs. interruption while the server saves
-        write_setting_number('.autosave_slots', 2),
-        write_setting_number('.autosave_interval', 8),
+        _write_setting_number('.autosave_slots', 2),
+        _write_setting_number('.autosave_interval', 8),
         # Initialise adminlist file
         f'sudo sh -c \'echo "[]" > {ADMIN_LIST_FILE}\'',
         f'sudo chmod 666 {ADMIN_LIST_FILE}'
@@ -96,5 +96,5 @@ def _write_setting_string(path, value):
     return _write_file(SERVER_CONFIG_FILE, f'jq \'{path} = "{value}"\'')
 
 
-def write_setting_number(path, value):
+def _write_setting_number(path, value):
     return _write_file(SERVER_CONFIG_FILE, f"jq '{path} = {value}'")
