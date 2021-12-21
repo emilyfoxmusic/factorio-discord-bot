@@ -127,3 +127,15 @@ class Game(commands.Cog):
                 await ctx.send(':no_entry_sign: Confirmation phrase did not match - to confirm ' +
                                'the delete, use ' +
                                f'`!delete {self.confirmation_phrases[game]}`')
+
+    @commands.command(help='Check that the server is running correctly')
+    async def healthcheck(self, ctx):
+        game = await game_mapping_helper.game_from_context(ctx, self.bot)
+        if game is not None:
+            await ctx.send('Performing healthcheck... :health_worker:')
+            passes_healthcheck = await game_service.passes_healthcheck(game)
+            if passes_healthcheck:
+                await ctx.send('Everything seems to be healthy :ok_hand:')
+            else:
+                await ctx.send("Hmm, something doesn't look right... use `!debug` to " +
+                               "see the Factorio server logs. :thermometer_face:")

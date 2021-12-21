@@ -31,8 +31,14 @@ class GamesManagement(commands.Cog, name="Managing Games"):
             channel = await category.create_text_channel(name)
             await channel_mapping_service.set_channel_mapping(name, guild.id, channel.id)
         ip = await ip_service.get_ip(name)
-        await ctx.send(f"Created {name} - now running at `{ip}`! Let's get this party started!" +
-                       " :partying_face:")
+        if await game_service.passes_healthcheck(name):
+            await ctx.send(f"Created {name} - now running at `{ip}`! Let's get this party " +
+                           "started! :partying_face:")
+        else:
+            await ctx.send(f"Created {name} at `{ip}`. **However**, it looks " +
+                           "like there's a problem because the game doesn't appear " +
+                           "to be running. This is most likely due to incompatibility between " +
+                           "mods. Use `!debug` to see the logs. :thermometer_face:")
 
     @commands.command(name='set-game',
                       help='Link the current channel to the specified game',

@@ -1,6 +1,8 @@
+import logging
+from aiobotocore import waiter
 from factorio_rcon import RCONBaseError
 from ..exceptions import InvalidOperationException
-from ..clients import stack_client
+from ..clients import stack_client, ecs_client
 from ..services import (mod_service, ip_service, player_service,
                         backup_service, config_service, status_service)
 from ..services.status_service import Status
@@ -65,3 +67,13 @@ async def stop(game, force):
 
 async def game_exists(game):
     return game in await status_service.list_game_statuses()
+
+
+async def passes_healthcheck(game):
+    try:
+        return await ecs_client.get_stable_running_task_count(game) == 1
+    except waiter.WaiterError:
+        logging.warning(
+            'ECS service for %s is not stable - there may be an issue with the Factorio server',
+            game)
+        return False
