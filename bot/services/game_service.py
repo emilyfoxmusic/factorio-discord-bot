@@ -2,7 +2,7 @@ from factorio_rcon import RCONBaseError
 from ..exceptions import InvalidOperationException
 from ..clients import stack_client
 from ..services import (mod_service, ip_service, player_service,
-                        backup_service, server_settings_service, status_service)
+                        backup_service, config_service, status_service)
 from ..services.status_service import Status
 
 
@@ -16,7 +16,7 @@ async def create_game(game, version, *mods):
     await stack_client.create_stack(game, version)
     if len(mod_releases) > 0:
         await mod_service.install_releases(game, mod_releases)
-    await server_settings_service.set_default_settings(game)
+    await config_service.set_default_config(game)
 
 
 async def delete_game(game):

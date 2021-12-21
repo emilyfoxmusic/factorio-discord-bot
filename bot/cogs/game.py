@@ -8,7 +8,6 @@ from ..helpers import game_mapping_helper
 from ..utilities import random_string
 from .roles import FACTORIO_CATEGORY
 
-
 STATUSES_TO_MESSAGES = {
     Status.CREATING: 'The game is being created as we speak :baby:',
     Status.RUNNING: 'The game is running! Go make some factories :tada:',
@@ -62,22 +61,13 @@ class Game(commands.Cog):
             await ctx.send('Successfully stopped, goodbye :wave: ' +
                            '(Use `!list-backups` to get latest backup.)')
 
-    @commands.command(help='Get the current IP address for the game (if running)')
+    @commands.command(help='Get the current IP address for the game')
     async def ip(self, ctx):
         game = await game_mapping_helper.game_from_context(ctx, self.bot)
         if game is not None:
             ip = await ip_service.get_ip(game)
             await ctx.send(f'Join at `{ip}` :construction:')
 
-    @commands.command(help='Reset the server auto-shutdown timer',
-                      decription="When this command is invoked, the auto-shutdown " +
-                      "resets and the game will stay up for another 30mins.",
-                      name="let-me-live")
-    async def let_me_live(self, ctx):
-        game = await game_mapping_helper.game_from_context(ctx, self.bot)
-        if game is not None:
-            inactivity_service.reset_idle_counter(game)
-            await ctx.send("Ok, I'll stick around for a bit longer :dancer:")
 
     @commands.command(help='Get the Factorio logs (for debugging mods)')
     async def debug(self, ctx, lines=20):
@@ -87,7 +77,7 @@ class Game(commands.Cog):
             with io.StringIO(logs) as logs_file:
                 await ctx.send("Debug trace:", file=discord.File(logs_file, "logs.txt"))
 
-    @commands.command(help='Get the players for the game (if running)', usage='[all]')
+    @commands.command(help='Get the players for the game', usage='[all]')
     async def players(self, ctx, *args):
         game = await game_mapping_helper.game_from_context(ctx, self.bot)
         if game is not None:
