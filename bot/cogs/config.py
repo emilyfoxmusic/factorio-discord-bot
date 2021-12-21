@@ -35,6 +35,21 @@ class Config(commands.Cog):
             await ctx.send('Admins have been removed, but **you will need to restart the ' +
                            'server for this to take effect** (use `!restart`).')
 
+    @commands.command(help='Get current config for the supplied key')
+    async def config(self, ctx, key):
+        game = await game_mapping_helper.game_from_context(ctx, self.bot)
+        if game is not None:
+            value = await config_service.get_config(game, key)
+            await ctx.send(f'Config {key} is currently set to {value}. (Restart may be required.)')
+
+    @commands.command(help='Set server config for the supplied key', name='config-set')
+    async def config_set(self, ctx, key, value):
+        game = await game_mapping_helper.game_from_context(ctx, self.bot)
+        if game is not None:
+            value = await config_service.set_config(game, key, value)
+            await ctx.send(f'Config for {key} has been set, but **you will need to restart the ' +
+                           'server for this to take effect** (use `!restart`).')
+
     @commands.command(help='Restart the server',
                       description='This is required for any config changes to take effect.')
     async def restart(self, ctx):
