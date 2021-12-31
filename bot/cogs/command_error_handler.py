@@ -11,7 +11,7 @@ class CommandErrorHandler(commands.Cog):
     async def on_command_error(self, ctx, error):
         if hasattr(error, 'original') and isinstance(error.original, InvalidOperationException):
             await ctx.send(error.original.message + ' :warning:')
-        elif isinstance(error, commands.MissingRequiredArgument):
+        elif isinstance(error, commands.UserInputError):
             await ctx.send("Oops, that's not how you use this command. " +
                            f"Use `!help {ctx.command.name}` for more details.")
         elif isinstance(error, commands.CommandNotFound):
