@@ -23,7 +23,7 @@ When the bot starts up it creates the following in your discord guild:
   with the 'Factorio' role can see it.
 
 In order to see the server channels you need to opt in to get the 'Factorio'
-role (see below).
+role.
 
 ### Opt-in / out
 `!count-me-in` Assigns the commandee the Factorio role, to enable them to see
@@ -34,8 +34,10 @@ invited, that's not hidden behind the Factorio role.
 
 `!count-me-out` Removes the Factorio role from the commandee.
 
+This can also be done manually by admins on the discord server.
 
-### Admin commands
+
+### Managing games
 `!new <name> <version> <*mods>` Creates a new game with the specified name,
 version and mods. See the
 [factorio-docker](https://github.com/factoriotools/factorio-docker) readme for
@@ -45,13 +47,16 @@ information about supported versions. Common choices will be 'latest' or
 A new discord channel is created automatically for controlling this game under
 the Factorio servers category.
 
-`!delete <name>` Deletes the game specified.
+Note: you can theoretically re-use names from games that have been deleted,
+however be warned that if you do this then the backups will be entwined so it is
+not recommended! (If you do really want to do this you may want to delete/rename the
+historical backups manually from the AWS S3 console.)
+
+`!list` Lists the active games, and their current status (running, stopped etc.).
 
 `!set-game <name>` Specifies that the current discord channel should control the
 game specified (see game commands). Since a channel is automatically created for
 each game, you shouldn't need this by default.
-
-`!list` Lists the active games, and their current status.
 
 ### Game commands
 The following commands will only work inside a discord channel linked to the
@@ -59,27 +64,78 @@ game (see `!set-game`).
 
 `!start` Starts the server.
 
-`!stop` Stops the server.
+`!stop` Stops the server. If there are any players in game then this command will
+fail. When the server is not contactable using RCON for whatever reason then you
+will need to use `!stop force` which will stop it even if checking the online players
+and/or taking the backup fails.
 
 `!status` Asks for the status of the server (e.g. running, stopped, starting).
 
 `!ip` Gets the IP address of the game (if running).
 
-`!let-me-live` Resets the idle counter for the server (and causes it to stay
+`!debug [number of lines=20]` Posts the last _n_ lines from the factorio logs, 
+where _n_ is the number specified (or defaults to 20 if not specified). This is
+useful for debugging a game where the factorio container fails to start due to
+incompatible mods.
+
+`!players` Gets the players currently in game. Use `!players all` to show all
+players who have _ever_ played the game.
+
+`!delete` Deletes the game. You will be asked to type the command again, with a
+randomly generated phrase to confirm the deletion. *Make sure that you have*
+*appropriate backups before running this command!* (This is a permanent deletion
+that would need manual restoring should you wish to play the game again. Previous
+backups are not deleted.)
+
+### Config
+The following commands will only work inside a discord channel linked to the
+game (see `!set-game`).
+
+`!admins` Lists the current game admins.
+
+`!admins-add <*players>` Adds the specified player(s) to the admin list. `!restart`
+is required for changes to take effect.
+
+`!admins-remove <*players>` Removes the specified player(s) from the admin list.
+`!restart` is required for changes to take effect.
+
+`!restart` Restarts the docker container (in order for updated config to take effect).
+
+### Autoshutdown
+Games will automatically shutdown after ~45 minutes of continued inactivity. The bot will
+send the following messages:
+
+| Time (approx.) | Message                                    | Action   |
+| -------------- | ------------------------------------------ | -------- |
+| ~15mins        | Prompt that server is idle                 | -        |
+| ~30mins        | Warning that server will shutdown soon     | -        |
+| ~45mins        | Notification that server is shutting down  | Shutdown |
+
+If at any point the server can't be reached with RCON commands (to check idle status) on two
+consecutive checks (15mins apart) the bot will send a notification to that effect. After a further
+~45 mins the game will be shutdown (forcefully, i.e. without taking a backup) if required. Note
+this shouldn't usually happen, the main thing that can cause this is a game having incompatible
+mods and hence failing to start properly, and in that case we don't want the server to run indefinitely
+if no one's looking into it.
+
+`!let-me-live` Resets the idle counters for the server (and causes it to stay
 running for another ~30mins).
 
 ### Backups
 Backups are copied from the server and saved to S3. The download links are
 publically available.
 
+The following commands will only work inside a discord channel linked to the
+game (see `!set-game`).
+
 `!backup` Take a backup of the game, and post the link in discord.
 
 `!list-backups [number=1]` Post links to the latest backup(s). The number posted
 is 1 by default.
 
-Note you can also use `!list-backups <number> <game-label>` if you have already
-deleted the game. (Warning: if you create a new game with the same name, the
-backups will be entwined!)
+Note you can also use `!list-backups <number> <game-label>` in any channel that
+the factorio bot can see if you have already deleted the game. (Warning: if you 
+create a new game with the same name, the backups will be entwined!)
 
 ### Healthcheck
 `!heartbeat` Prints a generic message - used for sanity checking that the bot is
