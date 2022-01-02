@@ -29,31 +29,29 @@ async def auto_shutdown_loop(bot):
             if idle_status == previous_idle_status:
                 logging.info(
                     'No change in idle status for %s - still %s', game, idle_status)
-                return
-
-            # Only react when the status changes - not on every iteration
-            logging.info('Idle status for %s has changed - was %s, now %s',
-                         game, previous_idle_status, idle_status)
-            PREVIOUS_IDLE_STATUSES[game] = idle_status
-            if idle_status == IdleStatus.SHUTDOWN or idle_status == IdleStatus.UNKNOWN_SHUTDOWN:
-                logging.info('Stopping %s due to inactivity', game)
-                await game_message_service.send_shutdown_notification(bot, game)
-                try:
-                    force = previous_idle_status == IdleStatus.SHUTDOWN_FAILED
-                    logging.info('Stopping %s with force=%s', game, force)
-                    await game_service.stop(game, force)
-                    await game_message_service.send_shutdown_finished(bot, game)
-                except InvalidOperationException:
-                    await game_message_service.send_shutdown_failed(bot, game)
-                    logging.error(
-                        'Failed to stop %s, will use force next time', game)
-                    PREVIOUS_IDLE_STATUSES[game] = IdleStatus.SHUTDOWN_FAILED
-            if idle_status == IdleStatus.UNKNOWN_WARNING:
-                await game_message_service.send_unknown_idle_status_message(bot, game)
-            if idle_status == IdleStatus.WARNING:
-                await game_message_service.send_shutdown_warning(bot, game)
-            if idle_status == IdleStatus.IDLE:
-                await game_message_service.send_idle_message(bot, game)
+            else:
+                logging.info('Idle status for %s has changed - was %s, now %s',
+                            game, previous_idle_status, idle_status)
+                PREVIOUS_IDLE_STATUSES[game] = idle_status
+                if idle_status == IdleStatus.SHUTDOWN or idle_status == IdleStatus.UNKNOWN_SHUTDOWN:
+                    logging.info('Stopping %s due to inactivity', game)
+                    await game_message_service.send_shutdown_notification(bot, game)
+                    try:
+                        force = previous_idle_status == IdleStatus.SHUTDOWN_FAILED
+                        logging.info('Stopping %s with force=%s', game, force)
+                        await game_service.stop(game, force)
+                        await game_message_service.send_shutdown_finished(bot, game)
+                    except InvalidOperationException:
+                        await game_message_service.send_shutdown_failed(bot, game)
+                        logging.error(
+                            'Failed to stop %s, will use force next time', game)
+                        PREVIOUS_IDLE_STATUSES[game] = IdleStatus.SHUTDOWN_FAILED
+                if idle_status == IdleStatus.UNKNOWN_WARNING:
+                    await game_message_service.send_unknown_idle_status_message(bot, game)
+                if idle_status == IdleStatus.WARNING:
+                    await game_message_service.send_shutdown_warning(bot, game)
+                if idle_status == IdleStatus.IDLE:
+                    await game_message_service.send_idle_message(bot, game)
 
 
 def reset_idle_counter(game):
