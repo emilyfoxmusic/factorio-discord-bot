@@ -23,12 +23,12 @@ Parameters:
   InstanceType:
     Type: String
     Description: "m3.medium is a good cost effective (albeit older) instance, 1 VCPU and 3.75 GB of RAM with moderate network performance. m4.large is the closest available in the UK. Change at your discretion. https://aws.amazon.com/ec2/instance-types/."
-    Default: m4.large
+    Default: m5.large
 
   SpotPrice:
     Type: String
     Description: "An m3.medium shouldn't cost more than a cent per hour. Note: Leave this blank to use on-demand pricing."
-    Default: "0.05"
+    Default: "0.10"
 
   KeyPairName:
     Type: String
